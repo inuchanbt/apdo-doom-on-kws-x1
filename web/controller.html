@@ -8,9 +8,18 @@
   <div class="workspace">
     <section class="preview" aria-label="Live KWS-X1 screen">
       <div class="section-heading"><h2>On the meter</h2><span class="badge">LIVE CAPTURE</span></div>
-      <div class="screen-area"><img id="screen" alt="Actual game image captured from KWS-X1" hidden><p id="screen-placeholder">Waiting for the first frame…</p></div>
-      <div class="preview-tools"><label><input id="preview-enabled" type="checkbox" checked> Live preview</label><a id="save-frame" href="/api/frame.bmp" download="kws-x1-frame.bmp" hidden>Save frame ↓</a></div>
+      <div class="screen-area">
+        <div class="device-mockup" id="device-mockup">
+          <img class="device-shell" src="/assets/kws-x1-shell.png" alt="KOWSI KWS-X1 enclosure" draggable="false">
+          <div class="device-display"><img id="screen" alt="Actual game image captured from KWS-X1" hidden><p id="screen-placeholder">Waiting for capture…</p></div>
+        </div>
+      </div>
+      <div class="preview-tools"><label><input id="preview-enabled" type="checkbox" checked> Live preview</label><button id="enlarge" disabled>Enlarge preview</button><a id="save-frame" href="/api/frame.bmp" download="kws-x1-frame.bmp" hidden>Save frame ↓</a></div>
       <p id="screen-info" class="detail">120 × 90 · up to 1 preview per second</p><p class="hint">Pause preview to prioritize playing on the meter.</p>
+      <div class="lcd-controls"><button id="rotate" disabled>Rotate LCD 180°</button><output id="rotation" aria-live="polite">—</output></div>
+      <label class="rotation-mode">Preview orientation <select id="rotation-mode"><option value="upright">Follow LCD · upright game</option><option value="fixed">Fixed enclosure · LCD view</option></select></label>
+      <p id="rotation-info" class="detail">LCD rotation requires v5 firmware.</p>
+      <p id="display-error" role="alert"></p>
     </section>
     <section class="controls" aria-label="Game controls">
       <div class="section-heading"><h2>Take control</h2><span id="focus" class="detail">Keyboard off</span></div>
@@ -30,4 +39,10 @@
   </div>
   <p id="error" role="alert"></p>
   <footer><p>Keep this server running while you play.<br>After USB loss, power-cycle the meter to resume.</p><button id="stop">Stop server</button></footer>
-</main></body></html>
+</main>
+<dialog id="preview-dialog" aria-labelledby="preview-title">
+  <div class="expanded-heading"><h2 id="preview-title">Live screen · enlarged</h2><button id="close-preview">Close</button></div>
+  <img id="screen-large" alt="Enlarged actual game image from KWS-X1">
+  <p id="expanded-info" class="detail"></p><p class="hint">Same 120 × 90 capture, enlarged for viewing. Close or Esc returns to controls.</p>
+</dialog>
+</body></html>

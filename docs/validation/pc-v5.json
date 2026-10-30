@@ -1,0 +1,28 @@
+{
+  "recorded_date": "2026-10-30",
+  "device_count": 1,
+  "bootloader": "V1.1",
+  "firmware_image_sha256": "037f4d2a481e7723d94b434c0913bb1d682bd16b655f562f676722ebf3536298",
+  "offline_tests": {"python_pc_controller": 14, "rust_optimizations": 12, "container_regressions": 9},
+  "update": {
+    "batch_checksums_accepted": 26,
+    "flasher_exit_code": -1073741819,
+    "windows_exception": "0xC0000005",
+    "final_acceptance_reboot_log_captured": false,
+    "subsequent_v5_boot_handshake_and_gameplay": "pass"
+  },
+  "checks": {
+    "browser_live_enclosure_preview": "pass",
+    "browser_180_degree_device_ack": "pass",
+    "browser_return_to_zero_device_ack": "pass",
+    "physical_rotation_and_complete_hud": "user confirmed normal",
+    "upright_and_fixed_enclosure_modes": "pass",
+    "browser_keyboard_escape_menu_open_close": "pass",
+    "enlarged_live_menu_and_escape_close": "pass",
+    "final_user_confirmation": "user confirmed the completed UI and behavior",
+    "final_orientation_degrees": 0,
+    "final_menu_active": false,
+    "final_remote_input": "released"
+  },
+  "scope": "One-device functional/browser checks. Flasher termination was abnormal; no independent complete flash readback."
+}

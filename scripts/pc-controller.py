@@ -37,6 +37,8 @@ class Bridge:
         self.preview_enabled=True
         self.last_preview=0.0
         self.connected=False
+        self.protocol=4
+        self.rotation=0
         self.connection_id=0
         self.last_seen=0.0
         self.record={}
@@ -45,7 +47,7 @@ class Bridge:
         self.bitmap=None
         self.snapshot_id=0
         self.last_image=0.0
-        self.error='Waiting for KWS-X1 PC-control firmware (v4).'
+        self.error='Waiting for KWS-X1 PC-control firmware (v4/v5).'
         self.pending=deque()
         self.buttons=0
         self.updated=0.0
@@ -93,11 +95,12 @@ class Bridge:
             self.clear_requested=False
             preview=(self.preview_enabled and not self.stopped.is_set() and record['frame']>1 and now-self.last_preview>=1)
             if preview: self.last_preview=now
-            return dict(buttons=buttons,events=events,clear=clear,preview=preview,lease_ms=750)
+            return dict(buttons=buttons,events=events,clear=clear,preview=preview,lease_ms=750,rotation=self.rotation)
 
-    def on_connected(self):
+    def on_connected(self,version=4):
         with self.lock:
             self.release();self.connected=True;self.connection_id+=1;self.last_seen=self.clock()
+            self.protocol=version;self.rotation=0
             self.record={};self.frame_times.clear();self.screen=None;self.bitmap=None
             self.last_preview=0.0;self.last_image=0.0;self.error=''
 
@@ -123,6 +126,12 @@ class Bridge:
             if enabled: self.last_preview=0.0
             return True
 
+    def set_rotation(self,value):
+        with self.lock:
+            if self.protocol<5 or not self.alive(): return False
+            self.release();self.rotation=value
+            return True
+
     def snapshot(self):
         with self.lock:
             alive=self.alive()
@@ -133,7 +142,8 @@ class Bridge:
                 if last[0]>first[0] and last[1]>=first[1]: fps=(last[1]-first[1])/(last[0]-first[0])
             return dict(connected=alive,connection_id=self.connection_id,reply=dict(self.record),render_fps=fps,
                 preview_enabled=self.preview_enabled,screen=dict(self.screen) if alive and self.screen else None,
-                error=self.error if not alive else '',buttons=self.buttons)
+                error=self.error if not alive else '',buttons=self.buttons,
+                display=dict(supported=self.protocol>=5,rotation=self.record.get('rotation',0),requested_rotation=self.rotation))
 
     def frame(self):
         with self.lock: return self.bitmap if self.alive() else None
@@ -141,13 +151,13 @@ class Bridge:
     def run(self):
         while not self.stopped.is_set():
             try:
-                port=self.port or usb_link.find_port(1,4)
-                usb_link.serve(port,self.data,4,self.stats,control=self.control,on_connected=self.on_connected,
+                port,version=usb_link.find_controller_port(1,self.port)
+                usb_link.serve(port,self.data,version,self.stats,control=self.control,on_connected=lambda:self.on_connected(version),
                     on_frame=self.on_frame,on_image=self.on_image,on_activity=self.on_activity,stop=self.stopped)
             except Exception as error:
                 with self.lock:
                     self.connected=False;self.release();self.screen=None;self.bitmap=None
-                    self.error=f'{error}. Waiting for v4; power-cycle the meter after USB loss.'
+                    self.error=f'{error}. Waiting for v4/v5; power-cycle the meter after USB loss.'
             if self.stopped.wait(1): break
 
     def close(self):
@@ -174,7 +184,8 @@ def handler_for(bridge):
                 frame=bridge.frame()
                 return self.respond(200,frame,'image/bmp') if frame else self.respond(404,{'error':'No captured frame yet'})
             assets={'/':('controller.html','text/html; charset=utf-8'),'/controller.js':('controller.js','text/javascript; charset=utf-8'),
-                    '/controller.css':('controller.css','text/css; charset=utf-8')}
+                    '/controller.css':('controller.css','text/css; charset=utf-8'),
+                    '/assets/kws-x1-shell.png':('assets/kws-x1-shell.png','image/png')}
             if path not in assets: return self.respond(404,{'error':'Not found'})
             name,mime=assets[path];return self.respond(200,(ROOT/'web'/name).read_bytes(),mime)
         def do_POST(self):
@@ -195,6 +206,11 @@ def handler_for(bridge):
                 if self.path=='/api/preview':
                     if set(data)!={'enabled'} or type(data['enabled']) is not bool: raise ValueError()
                     return self.respond(200,{'ok':bridge.set_preview(data['enabled'])})
+                if self.path=='/api/display':
+                    value=data.get('rotation')
+                    if set(data)!={'rotation'} or type(value) is not int or value not in (0,180): raise ValueError()
+                    ok=bridge.set_rotation(value)
+                    return self.respond(200 if ok else 409,{'ok':ok})
                 if self.path=='/api/release':
                     if data: raise ValueError()
                     return self.respond(200,{'ok':bridge.release()})
@@ -208,7 +224,7 @@ def handler_for(bridge):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--usb-port',help='Exact USB COM port; otherwise discover v4 only')
+    parser.add_argument('--usb-port',help='Exact USB COM port; otherwise discover v4/v5')
     parser.add_argument('--port',type=int,default=0,help='Local HTTP port; default chooses a free port')
     parser.add_argument('--no-browser',action='store_true')
     parser.add_argument('--session-file',type=Path)

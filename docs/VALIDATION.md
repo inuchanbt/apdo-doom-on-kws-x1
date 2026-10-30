@@ -80,6 +80,20 @@ v4r1 installed with final bootloader acceptance and flasher exit **0**, and reco
 
 Automatic browser visual/input checking stopped because the Windows computer-use tool could not determine the active browser URL with sufficient confidence. Browser focus-loss behavior remains unconfirmed. See [PC-CONTROLS.md](PC-CONTROLS.md).
 
+## v5 enclosure preview and LCD rotation
+
+The v5 candidate passed the complete offline suite: the real host engine/HUD and full-tic-buffer short-press regression, 14 Python controller tests, 12 Rust optimization/control/preview tests, all-page codec checks, and nine image/container regressions. The built image passed the full decompression/erase-layout audit and flasher dry-run. SHA-256:
+
+```text
+037f4d2a481e7723d94b434c0913bb1d682bd16b655f562f676722ebf3536298
+```
+
+The source adds versioned rotation commands, applied-angle telemetry, correct panel row offsets for both orientations, and a complete clear/HUD redraw at rotation boundaries. The browser uses the supplied enclosure photograph unchanged and preserves the preview aspect ratio. Its layout was visually checked in the in-app browser using a saved real-device frame in an explicitly labelled offline fixture. The normal desktop view and 390-pixel breakpoint were checked; the narrow document width was 375 pixels, with no horizontal overflow. The temporary viewport override was reset afterward.
+
+The installed device subsequently booted v5, completed its versioned handshake, and streamed the game and previews. Both 180° and return-to-0° commands were exercised through the real browser, including acknowledgement from native telemetry. The user confirmed normal physical rotation and complete screen/HUD output. Upright-game and fixed-enclosure presentation modes were visually checked. PC Esc opened/closed the native game menu, and the enlarged-preview dialog showed the live menu and closed with Esc while PC input was disabled. The test ended at 0° with menu closed and remote input released. The local server was restarted as a hidden background process at the same URL.
+
+Unlike the clean v3/v4 updates, this v5 flasher process ended with Windows access violation `0xC0000005` (signed exit `-1073741819`) during final completion. All 26 batch checksums were accepted, but the final acceptance/reboot log was not captured. The later v5 boot, image-matching upper-region startup check, gameplay, rotation, and user confirmation establish subsequent application operation; this is not recorded as a clean flasher exit or an independent flash readback. See [validation/pc-v5.json](validation/pc-v5.json).
+
 ## Limits
 
 - No independent complete application/upper-flash readback was performed.

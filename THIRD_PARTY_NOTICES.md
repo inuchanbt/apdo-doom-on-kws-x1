@@ -16,3 +16,5 @@ The existing root [LICENSE](LICENSE) is MIT. It applies to documentation, projec
 The HC32 HAL/PAC, Embassy, and other Rust dependencies keep their own upstream terms. `locks/board.Cargo.lock` fixes dependency revisions. Dependency source remains in ignored local checkouts rather than being relicensed by this project. A complete redistribution must preserve the corresponding upstream notices and satisfy the terms of the combined firmware.
 
 Manufacturer X1C files, vendor update executables, bootloader dumps, calibration data, recovery backups, and compiled firmware are not included in this source repository.
+
+`web/assets/kws-x1-shell.png` is the enclosure photograph supplied by the user as `KOWSI_KWS-X1.png`, copied without image edits. Its original rights remain with its rights holder; the project's source-code MIT/GPL notices do not relicense this photograph.

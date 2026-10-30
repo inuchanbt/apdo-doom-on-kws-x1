@@ -21,14 +21,18 @@ HELLO3 = b'X1DOOM03' + struct.pack('<I', PACK_SIZE)
 HELLO3 += struct.pack('<I', zlib.crc32(HELLO3))
 HELLO4 = b'X1DOOM04' + struct.pack('<I',PACK_SIZE)
 HELLO4 += struct.pack('<I',zlib.crc32(HELLO4))
+HELLO5 = b'X1DOOM05' + struct.pack('<I',PACK_SIZE)
+HELLO5 += struct.pack('<I',zlib.crc32(HELLO5))
 
-def control_packet(frame, *, buttons=0, events=(), preview=False, clear=False, lease_ms=750):
+def control_packet(frame, *, buttons=0, events=(), preview=False, clear=False, lease_ms=750, rotation=0, version=4):
     if (type(frame) is not int or not 0<=frame<=0xffffffff or type(buttons) is not int or not 0<=buttons<=255
             or type(lease_ms) is not int or not 100<=lease_ms<=1000 or len(events)>8
             or type(preview) is not bool or type(clear) is not bool
-            or any(type(v) is not int or not 0<=v<=255 for v in events)):
+            or any(type(v) is not int or not 0<=v<=255 for v in events)
+            or type(rotation) is not int or rotation not in (0,180) or version not in (4,5)
+            or (version==4 and rotation!=0)):
         raise ValueError('Invalid PC input frame')
-    body=b'CTL4'+struct.pack('<IIIII',frame,buttons,lease_ms,int(preview)|(2 if clear else 0),len(events))+bytes(events).ljust(8,b'\0')
+    body=(b'CTL5' if version==5 else b'CTL4')+struct.pack('<IIIII',frame,buttons,lease_ms,int(preview)|(2 if clear else 0)|(4 if rotation==180 else 0),len(events))+bytes(events).ljust(8,b'\0')
     return body+struct.pack('<I',zlib.crc32(body))
 
 def receive_image(port, frame):
@@ -68,16 +72,19 @@ def read_exact(port, count):
     return bytes(data)
 
 def frame_stats(packet, elapsed):
-    if (len(packet),packet[:4]) not in ((24,b'STAT'),(32,b'STA3'),(48,b'FRM4')):
+    if (len(packet),packet[:4]) not in ((24,b'STAT'),(32,b'STA3'),(48,b'FRM4'),(52,b'FRM5')):
         raise ValueError('Invalid frame telemetry')
     number,ms,keys,misses,wait_ms = struct.unpack('<IIIII',packet[4:24])
     result = dict(frame=number,frame_ms=ms,fps=round(1000/max(1,ms),2),buttons=keys,
         misses=misses,usb_wait_ms=wait_ms,host_elapsed_s=round(elapsed,3))
-    if packet[:4] in (b'STA3',b'FRM4'):
+    if packet[:4] in (b'STA3',b'FRM4',b'FRM5'):
         result['stack_free_bytes'],result['decoded_pages'] = struct.unpack('<II',packet[24:32])
-    if packet[:4]==b'FRM4':
-        result['remote_buttons'],result['applied_buttons'],menu,result['preview_bytes'] = struct.unpack('<IIII',packet[32:])
+    if packet[:4] in (b'FRM4',b'FRM5'):
+        result['remote_buttons'],result['applied_buttons'],menu,result['preview_bytes'] = struct.unpack('<IIII',packet[32:48])
         result['menu_active']=bool(menu)
+    if packet[:4]==b'FRM5':
+        result['rotation']=struct.unpack_from('<I',packet,48)[0]
+        if result['rotation'] not in (0,180): raise ValueError('Invalid LCD orientation')
     return result
 
 def serve(port_name, data, version, stats_path, *, control=None,on_frame=None,on_image=None,on_connected=None,on_activity=None,stop=None):
@@ -86,7 +93,7 @@ def serve(port_name, data, version, stats_path, *, control=None,on_frame=None,on
     with serial.Serial(port_name, 115200, timeout=30, write_timeout=10) as port:
         # Windows may consume the device's first greeting before COM open.
         # Send our exact identity first; firmware verifies it before any read.
-        hello = {1:HELLO,2:HELLO2,3:HELLO3,4:HELLO4}[version]
+        hello = {1:HELLO,2:HELLO2,3:HELLO3,4:HELLO4,5:HELLO5}[version]
         encoded_pages = [encode(data[at:at+PAGE].ljust(PAGE,b'\0')) for at in range(0,len(data),PAGE)] if version>=2 else None
         port.write(hello)
         port.flush()
@@ -104,12 +111,14 @@ def serve(port_name, data, version, stats_path, *, control=None,on_frame=None,on
             request = pending if pending is not None else read_exact(port, 16)
             pending = None
             if on_activity: on_activity()
-            if request[:4] in (b'STAT',b'STA3',b'FRM4'):
-                tail={b'STAT':8,b'STA3':16,b'FRM4':32}[request[:4]]
+            if request[:4] in (b'STAT',b'STA3',b'FRM4',b'FRM5'):
+                if request[:4] in (b'FRM4',b'FRM5') and request[:4]!=({4:b'FRM4',5:b'FRM5'}.get(version)):
+                    raise ValueError('Telemetry does not match the selected firmware protocol')
+                tail={b'STAT':8,b'STA3':16,b'FRM4':32,b'FRM5':36}[request[:4]]
                 record = frame_stats(request+read_exact(port,tail),time.monotonic()-started)
                 if on_frame: on_frame(record)
-                if request[:4]==b'FRM4':
-                    command=control_packet(record['frame'],**(control(record) if control else {'clear':True}))
+                if request[:4] in (b'FRM4',b'FRM5'):
+                    command=control_packet(record['frame'],version=version,**(control(record) if control else {'clear':True}))
                     port.write(command)
                     if struct.unpack_from('<I',command,16)[0]&1:
                         image=receive_image(port,record['frame'])
@@ -127,12 +136,26 @@ def serve(port_name, data, version, stats_path, *, control=None,on_frame=None,on
             if requests % 1000 == 0:
                 print(f'{requests} game-data pages served', flush=True)
 
+def find_controller_port(wait_seconds,exact_port=None):
+    """Discover only supported PC-control applications; never probe an old app."""
+    from serial.tools import list_ports
+    deadline=time.monotonic()+wait_seconds
+    identities={'KWSX1DOOM04':4,'KWSX1DOOM05':5}
+    while True:
+        matches=[(p.device,identities[p.serial_number]) for p in list_ports.comports()
+                 if p.device and p.vid==0xc0de and p.pid==0xd00d and p.serial_number in identities
+                 and (exact_port is None or p.device.casefold()==exact_port.casefold())]
+        if len(matches)==1: return matches[0]
+        if len(matches)>1: raise ValueError('Multiple DOOM devices; select an exact --usb-port')
+        if time.monotonic()>=deadline: raise TimeoutError('KWS-X1 v4/v5 USB port did not appear')
+        time.sleep(.25)
+
 def find_port(wait_seconds,version=3):
     from serial.tools import list_ports
     deadline = time.monotonic() + wait_seconds
     while True:
         matches = [p.device for p in list_ports.comports()
-                   if p.device and p.vid == 0xc0de and p.pid == 0xd00d and p.serial_number == ('KWSX1DOOM04' if version>=4 else 'KWSX1DOOM01')]
+                   if p.device and p.vid == 0xc0de and p.pid == 0xd00d and p.serial_number == ({4:'KWSX1DOOM04',5:'KWSX1DOOM05'}.get(version,'KWSX1DOOM01'))]
         if len(matches) == 1:
             print(f'Found KWS-X1 DOOM on {matches[0]}', flush=True)
             return matches[0]
@@ -147,7 +170,7 @@ def main():
     parser.add_argument('--port', help='Exact Windows COM port of the DOOM application')
     parser.add_argument('--auto', action='store_true', help='Wait for the exact DOOM USB identity')
     parser.add_argument('--wait', type=float, default=60, help='Maximum automatic discovery wait in seconds')
-    parser.add_argument('--version',type=int,choices=(1,2,3,4),default=4,help='Protocol of the installed firmware')
+    parser.add_argument('--version',type=int,choices=(1,2,3,4,5),default=5,help='Protocol of the installed firmware')
     parser.add_argument('--stats',type=Path,default=ROOT/'artifacts/runtime.jsonl',help='Frame telemetry log')
     parser.add_argument('--pack', type=Path, default=ROOT/'vendor/dmc100-doom/build/packs/E1M1/DOOM.DAT')
     parser.add_argument('--check', action='store_true', help='Validate pack offline, without USB discovery')

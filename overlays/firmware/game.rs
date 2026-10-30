@@ -10,6 +10,7 @@ unsafe extern "C" {
     fn km_doom_init();
     fn km_doom_step();
     fn km_doom_menu() -> i32;
+    fn km_doom_redraw();
 }
 #[unsafe(no_mangle)]
 extern "C" fn km_millis() -> u32 { embassy_time::Instant::now().as_millis() as u32 }
@@ -74,7 +75,7 @@ pub async fn run() -> ! {
     unsafe {
         core::ptr::write_bytes((&raw mut FRAME).cast::<u16>(), 0, 180 * 135);
         crate::stream::init();
-        assert!(crate::panel::game_clear().await);
+        assert!(crate::panel::game_clear(crate::panel::Orientation::Normal).await);
     }
     while !crate::stream::CONNECTED.load(core::sync::atomic::Ordering::Acquire) {
         embassy_time::Timer::after_millis(20).await;
@@ -82,12 +83,22 @@ pub async fn run() -> ! {
     unsafe { km_doom_init(); }
     crate::stream::reset_counters();
     let mut frames = 0u32;
+    let mut inverted = false;
     loop {
         let start = embassy_time::Instant::now();
+        let desired = crate::display::DESIRED.load(Ordering::Acquire);
+        let orientation = if desired {crate::panel::Orientation::Inverted} else {crate::panel::Orientation::Normal};
         unsafe {
+            if desired != inverted {
+                assert!(crate::panel::set_orientation(orientation).await);
+                assert!(crate::panel::game_clear(orientation).await);
+                km_doom_redraw();
+                inverted = desired;
+            }
             km_doom_step();
-            assert!(crate::panel::game_flush((&raw const FRAME).cast()).await);
+            assert!(crate::panel::game_flush((&raw const FRAME).cast(),orientation).await);
         }
+        crate::display::APPLIED.store(inverted,Ordering::Release);
         frames = frames.wrapping_add(1);
         crate::stream::frame(frames,start.elapsed().as_millis() as u32,
             u32::from(crate::input::APPLIED.load(core::sync::atomic::Ordering::Relaxed)));

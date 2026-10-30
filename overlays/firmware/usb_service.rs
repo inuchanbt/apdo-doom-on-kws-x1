@@ -10,7 +10,7 @@ pub async fn task() {
     let mut config = embassy_usb::Config::new(0xc0de, 0xd00d);
     config.manufacturer = Some("APDO experiment");
     config.product = Some("KWS-X1 native DOOM data link");
-    config.serial_number = Some("KWSX1DOOM04");
+    config.serial_number = Some("KWSX1DOOM05");
     let mut cfg = [0; 256];
     let mut bos = [0; 256];
     let mut control = [0; 64];
@@ -22,7 +22,7 @@ pub async fn task() {
         class.wait_connection().await;
         // Hello must echo format, image size and CRC before native startup.
         let mut hello = [0u8; 16];
-        hello[..8].copy_from_slice(b"X1DOOM04");
+        hello[..8].copy_from_slice(b"X1DOOM05");
         hello[8..12].copy_from_slice(&stream::IMAGE_BYTES.to_le_bytes());
         let hello_crc = stream::crc32(&hello[..12]);
         hello[12..].copy_from_slice(&hello_crc.to_le_bytes());
@@ -38,12 +38,13 @@ pub async fn task() {
                 stream::Request::Read(address) => address,
                 stream::Request::Frame {number,ms,keys,misses,wait_ms,stack_free,decodes} => {
                     use core::sync::atomic::Ordering;
-                    let mut stats = [0u8;48];
-                    stats[..4].copy_from_slice(b"FRM4");
+                    let mut stats = [0u8;52];
+                    stats[..4].copy_from_slice(b"FRM5");
                     for (out,value) in stats[4..].chunks_exact_mut(4).zip([number,ms,keys,misses,wait_ms,stack_free,decodes,
                         u32::from(crate::remote::APPLIED.load(Ordering::Relaxed)),
                         u32::from(crate::game::APPLIED.load(Ordering::Relaxed)),
-                        u32::from(crate::game::MENU.load(Ordering::Relaxed)),crate::preview::BYTES as u32]) {
+                        u32::from(crate::game::MENU.load(Ordering::Relaxed)),crate::preview::BYTES as u32,
+                        if crate::display::APPLIED.load(Ordering::Acquire) {180} else {0}]) {
                         out.copy_from_slice(&value.to_le_bytes());
                     }
                     assert!(class.write_packet(&stats).await.is_ok());
@@ -55,6 +56,7 @@ pub async fn task() {
                         bytes[received..received+n].copy_from_slice(&packet[..n]);received+=n;
                     }
                     let control=crate::control::parse(&bytes,number).unwrap_or_else(|_|{crate::remote::clear();panic!("bad PC control frame")});
+                    crate::display::DESIRED.store(control.flags&crate::control::INVERTED!=0,Ordering::Release);
                     crate::remote::update(control);
                     if control.flags&crate::control::PREVIEW!=0 {
                         // FRAME stays immutable until READY. Two bounded passes

@@ -24,3 +24,7 @@
 *.DAT
 __pycache__/
 *.pyc
+
+# User-supplied source photos; the selected deployed copy is in web/assets/.
+/KOWSI_KWS-X1.png
+/KOWSI_KWS-X1_.png

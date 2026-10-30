@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-//! Fixed v4 input frame and allocation-free leased input state.
+//! Fixed v5 input/display frame and allocation-free leased input state.
 pub const CONTROL_BYTES: usize = 36;
 pub const PREVIEW: u32 = 1;
 pub const CLEAR: u32 = 2;
+pub const INVERTED: u32 = 4;
 #[derive(Debug,Clone,Copy)]
 pub struct Control { pub buttons:u8, pub lease_ms:u16, pub flags:u32, pub events:[u8;8], pub count:usize }
 pub fn crc_update(mut reg:u32, bytes:&[u8]) -> u32 {
@@ -14,9 +15,9 @@ pub fn crc_update(mut reg:u32, bytes:&[u8]) -> u32 {
 }
 pub fn parse(bytes:&[u8;CONTROL_BYTES], frame:u32) -> Result<Control,()> {
     let word=|at|u32::from_le_bytes(bytes[at..at+4].try_into().unwrap());
-    if &bytes[..4]!=b"CTL4" || word(4)!=frame || !crc_update(!0,&bytes[..32])!=word(32) {return Err(());}
+    if &bytes[..4]!=b"CTL5" || word(4)!=frame || !crc_update(!0,&bytes[..32])!=word(32) {return Err(());}
     let (buttons,lease,flags,count)=(word(8),word(12),word(16),word(20));
-    if buttons>255 || !(100..=1000).contains(&lease) || flags & !(PREVIEW|CLEAR)!=0 || count>8 {return Err(());}
+    if buttons>255 || !(100..=1000).contains(&lease) || flags & !(PREVIEW|CLEAR|INVERTED)!=0 || count>8 {return Err(());}
     let events=bytes[24..32].try_into().unwrap();
     Ok(Control {buttons:buttons as u8,lease_ms:lease as u16,flags,events,count:count as usize})
 }
@@ -58,11 +59,24 @@ mod tests {
         assert_eq!(r.next(110),0);
     }
     #[test] fn frame_crc_and_bounds_are_checked() {
-        let mut b=[0u8;36];b[..4].copy_from_slice(b"CTL4");b[4..8].copy_from_slice(&7u32.to_le_bytes());
+        let mut b=[0u8;36];b[..4].copy_from_slice(b"CTL5");b[4..8].copy_from_slice(&7u32.to_le_bytes());
         b[12..16].copy_from_slice(&750u32.to_le_bytes());
         let crc=!crc_update(!0,&b[..32]);b[32..].copy_from_slice(&crc.to_le_bytes());
         assert!(parse(&b,7).is_ok());assert!(parse(&b,8).is_err());
         b[24]^=1;assert!(parse(&b,7).is_err());
         assert_eq!(!crc_update(!0,b"123456789"),0xcbf43926);
+    }
+    #[test] fn rotation_is_versioned_crc_checked_and_independent_of_input_clear() {
+        let mut b=[0u8;36];b[..4].copy_from_slice(b"CTL5");
+        b[12..16].copy_from_slice(&750u32.to_le_bytes());
+        b[16..20].copy_from_slice(&(INVERTED|CLEAR).to_le_bytes());
+        let crc=!crc_update(!0,&b[..32]);b[32..].copy_from_slice(&crc.to_le_bytes());
+        assert_eq!(parse(&b,0).unwrap().flags,INVERTED|CLEAR);
+        b[..4].copy_from_slice(b"CTL4");
+        let crc=!crc_update(!0,&b[..32]);b[32..].copy_from_slice(&crc.to_le_bytes());
+        assert!(parse(&b,0).is_err());
+        b[..4].copy_from_slice(b"CTL5");b[16..20].copy_from_slice(&8u32.to_le_bytes());
+        let crc=!crc_update(!0,&b[..32]);b[32..].copy_from_slice(&crc.to_le_bytes());
+        assert!(parse(&b,0).is_err());
     }
 }

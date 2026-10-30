@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased — v5 enclosure preview and LCD rotation
+
+- Inset the actual live preview into the user-supplied KWS-X1 enclosure photograph without changing the photograph or stretching the game image.
+- Add 0/180-degree real LCD rotation, applied at a frame boundary with device acknowledgement, full clear/redraw, and the correct controller row offset.
+- Provide upright-game and fixed-enclosure preview modes; keep input mappings and the saved logical bitmap unchanged.
+- Add an enlarged live-preview dialog for inspecting menus; opening it releases PC input, and Close/Esc returns to controls.
+- Discover v4/v5 separately and disable LCD rotation on v4; validate versioned control packets and bounded rotation values.
+
 ## Unreleased — v4 PC controls
 
 - Local browser keyboard and pointer controls, with queued short presses, explicit release, focus-loss handling, and bounded input leases.

@@ -4,7 +4,7 @@
 
 **The KOWSI KWS-X1 USB-C power meter runs DOOM.** This port executes a low-memory DOOM engine and renders Freedoom's E1M1 on the meter's HC32F460. A USB-connected PC supplies game assets that do not fit on the device.
 
-The game runs on the meter. **A PC connection is required during play.** v4 adds browser keyboard/pointer controls and a switchable, low-rate preview of the actual device framebuffer. Physical buttons remain available.
+The game runs on the meter. **A PC connection is required during play.** Browser keyboard/pointer controls and a switchable, low-rate preview of the actual device framebuffer are available. v5 adds an enclosure mockup and real LCD rotation through 180 degrees. Physical buttons remain available.
 
 ## Verified on hardware
 
@@ -18,6 +18,7 @@ The game runs on the meter. **A PC connection is required during play.** v4 adds
 | v3 performance | Median 180 ms per frame, about **5.6 fps**, in the starting area |
 | USB | CDC asset streaming; length, sequence, address, and CRC32 validation |
 | PC link (v4) | Remote input, short taps, timed release, preview pause/resume, and capture checked through the local API on hardware |
+| LCD rotation (v5) | 0°/180° acknowledged through the browser; physical rotation and complete HUD confirmed by the user |
 | Update | Bootloader acceptance and flasher exit code 0 confirmed for v2/v3/v4 |
 | Stock restoration | Compatible stock-container structure checked; **restoration not tested** |
 
@@ -42,9 +43,9 @@ A [standalone size study](docs/STANDALONE-FEASIBILITY.md) measures reduced E1M1 
 
 Buttons are sampled every 5 ms, with debouncing and a bounded edge queue so short presses survive slow rendered frames.
 
-## Play from the PC (v4)
+## Play from the PC (v4/v5)
 
-After building and installing v4, start the controller:
+After building and installing the current firmware, start the controller:
 
 ```powershell
 .\scripts\play.ps1
@@ -64,7 +65,11 @@ The page also has holdable pointer/touch buttons. **Release all** clears PC inpu
 
 The preview is **120×90, at most one capture per second**; the meter still renders at its own rate. Disable **Live preview** to prioritize gameplay speed, or use **Save frame** to download the latest BMP. The meter FPS shown on the page includes preview transfer pauses. The v3 benchmark above remains a separate historical measurement.
 
-The controller supplies assets and owns the USB port: stop any other asset server first. It recognizes v4's serial string `KWSX1DOOM04`; older firmware needs an update. `-NoBrowser`, `-Port 8080`, and `-UsbPort COM6` are optional launcher arguments. **Stop server** also ends asset delivery; restart the server and power-cycle the meter to play again. See [PC controls and protocol](docs/PC-CONTROLS.md) for details and verification limits.
+The preview is inset into the supplied KWS-X1 enclosure photograph. On v5, **Rotate LCD 180°** rotates the real meter display at a frame boundary and waits for device confirmation. Choose **Follow LCD · upright game** to turn the enclosure around the upright preview, or **Fixed enclosure · LCD view** to show how the LCD looks in the stationary enclosure. Rotation keeps input mappings unchanged and resets on power-up. Saved BMPs retain the upright logical frame.
+
+Use **Enlarge preview** for a larger view without the enclosure, useful for inspecting menus. It enlarges the same 120×90 capture; it does not restore detail lost at capture resolution. Opening it releases PC keys. **Close** or Esc returns to the controls; enable the keyboard again to continue playing.
+
+The controller supplies assets and owns the USB port: stop any other asset server first. It recognizes v4's `KWSX1DOOM04` and v5's `KWSX1DOOM05` serial strings; rotation is disabled on v4. Older firmware needs an update. `-NoBrowser`, `-Port 8080`, and `-UsbPort COM6` are optional launcher arguments. **Stop server** also ends asset delivery; restart the server and power-cycle the meter to play again. See [PC controls and protocol](docs/PC-CONTROLS.md) for details and verification limits.
 
 ## Source and build
 
@@ -86,16 +91,16 @@ The source revisions and asset hashes are fixed in [SOURCE_LOCK.json](SOURCE_LOC
 
 ## Headless asset server / older firmware
 
-For v4 without browser controls or preview, run the headless server instead:
+For v5 without browser controls or preview, run the headless server instead:
 
 ```powershell
 . .\scripts\env.ps1
-& $env:KWS_PYTHON scripts\serve-game.py --auto --version 4
+& $env:KWS_PYTHON scripts\serve-game.py --auto --version 5
 ```
 
 Automatic discovery selects only this port's development USB identity and serial string. With multiple meters, use `--port COM5` with the correct port instead. Keep one asset server running while playing; it owns the USB connection. It has no flashing commands.
 
-The headless server logs frame time, asset requests, USB wait, inputs, decoded-page count, and untouched stack space to `artifacts/runtime.jsonl`. The browser controller defaults to `artifacts/runtime-v4.jsonl`. Choose a separate file with `--stats artifacts/run.jsonl` when invoking either Python entry point. v1/v2/v3 can use the corresponding `--version` value in the headless server.
+The headless server logs frame time, asset requests, USB wait, inputs, decoded-page count, and untouched stack space to `artifacts/runtime.jsonl`. The browser controller defaults to `artifacts/runtime-v4.jsonl` (also for v5). Choose a separate file with `--stats artifacts/run.jsonl` when invoking either Python entry point. v1/v2/v3/v4 can use the corresponding `--version` value in the headless server.
 
 A disconnect, bad response, or asset-read timeout stops this experimental firmware. To resume, restart the server and power-cycle the meter. Automatic gameplay reconnection is not implemented.
 
