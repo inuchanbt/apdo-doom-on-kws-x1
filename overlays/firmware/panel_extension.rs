@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-// Game-only rectangle transport. Keeps the 30-pixel sidebars out of SRAM.
+// Expand indexed pixels into four wire-order RGB565 rows per DMA transfer.
 pub async unsafe fn game_clear(orientation: Orientation) -> bool {
     let mut owner = DISPLAY.lock().await;
     let Some(bus) = owner.as_mut() else { return false; };
@@ -12,15 +12,21 @@ pub async unsafe fn game_clear(orientation: Orientation) -> bool {
     for _ in 0..panel::HEIGHT { if !bus.pixels(&row).await { return false; } }
     bus.idle().await
 }
-/// The 180x135 wire-order frame is immutable until this DMA future completes.
-pub async unsafe fn game_flush(frame: *const u16, orientation: Orientation) -> bool {
+/// Engine/preview ownership stays blocked until every row has been sent.
+pub async unsafe fn game_flush(frame: &crate::indexed_frame::Frame, orientation: Orientation) -> bool {
     let mut owner = DISPLAY.lock().await;
     let Some(bus) = owner.as_mut() else { return false; };
-    if !command(bus, panel::CMD_COLUMN_ADDRESS, &span(panel::X_OFFSET+30,180)).await
+    if !command(bus, panel::CMD_COLUMN_ADDRESS, &span(panel::X_OFFSET,240)).await
         || !command(bus, panel::CMD_ROW_ADDRESS, &span(orientation.first_row(),135)).await
         || !command(bus, panel::CMD_MEMORY_WRITE, &[]).await
         || !bus.idle().await { return false; }
     bus.dc(true);
-    let bytes = unsafe { core::slice::from_raw_parts(frame.cast::<u8>(),180*135*2) };
-    bus.pixels(bytes).await && bus.idle().await
+    let mut rows=[0u16;240*4];
+    for first in (0..135).step_by(4) {
+        let count=(135-first).min(4);
+        for i in 0..count {frame.row(first+i,&mut rows[i*240..(i+1)*240]);}
+        let bytes=unsafe {core::slice::from_raw_parts(rows.as_ptr().cast::<u8>(),count*240*2)};
+        if !bus.pixels(bytes).await {return false;}
+    }
+    bus.idle().await
 }

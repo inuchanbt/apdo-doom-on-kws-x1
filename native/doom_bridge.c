@@ -39,6 +39,8 @@ extern void km_sleep(uint32_t ms);
 extern void km_fail(const char *message) __attribute__((noreturn));
 extern void km_flash_read(uint32_t offset, void *dst, uint32_t count);
 extern void km_column(int x, int y, int h, const uint16_t *pixels);
+extern void km_index_column(int x,int y,int h,const uint8_t *pixels,unsigned ui);
+extern void km_set_palette(const uint16_t *colors);
 extern uint32_t km_keys(void);
 extern void km_exit(void) __attribute__((noreturn));
 
@@ -56,8 +58,53 @@ volatile struct pump_stats pump_stats;
 volatile struct nor_stats nor_stats;
 FILE *stderr, *stdout;
 
-// Every read shares one synchronous QSPI owner with display writes.
-void nor_read(uint32_t at, void *dst, uint32_t n) { km_flash_read(at, dst, n); }
+// Small map/actor records otherwise repeatedly cross the C/Rust boundary and
+// evict decoded 1 KiB pages. Keep only short reads; columns and flats bypass it.
+#ifndef KM_CACHE_KIB
+#define KM_CACHE_KIB 4
+#endif
+#if KM_CACHE_KIB
+#define READ_LINE 16u
+#define READ_WAYS 4u
+#define READ_SETS (KM_CACHE_KIB*1024u/(READ_LINE*READ_WAYS))
+static uint8_t read_data[READ_SETS][READ_WAYS][READ_LINE];
+static uint32_t read_tag[READ_SETS][READ_WAYS];
+static uint8_t read_mru[READ_SETS];
+static void read_cache_reset(void) {
+    memset(read_tag,0xff,sizeof(read_tag));
+    memset(read_mru,0,sizeof(read_mru));
+}
+#else
+static void read_cache_reset(void) {}
+#endif
+void nor_read(uint32_t at, void *dst, uint32_t n) {
+#if KM_CACHE_KIB
+    // Before img_init has read the header, only the fixed header is readable.
+    uint32_t end=img.size?img.size:DMC_HEADER_SIZE;
+    if(at>end || n>end-at)km_fail("Game data out of range");
+    if(n>READ_LINE) { km_flash_read(at,dst,n);return; }
+    uint8_t *out=dst;
+    while(n) {
+        uint32_t base=at&~(READ_LINE-1),set=base/READ_LINE%READ_SETS;
+        unsigned way;
+        for(way=0;way<READ_WAYS;way++)if(read_tag[set][way]==base)break;
+        if(way==READ_WAYS) {
+            way=(read_mru[set]+1)%READ_WAYS;
+            uint32_t count=end-base;
+            if(count>READ_LINE)count=READ_LINE;
+            km_flash_read(base,read_data[set][way],count);
+            read_tag[set][way]=base;
+        }
+        read_mru[set]=way;
+        uint32_t offset=at-base,count=READ_LINE-offset;
+        if(count>n)count=n;
+        memcpy(out,read_data[set][way]+offset,count);
+        out+=count;at+=count;n-=count;
+    }
+#else
+    km_flash_read(at,dst,n);
+#endif
+}
 int nor_read_async(uint32_t at, void *dst, uint32_t n, int prio) {
     (void)prio; nor_read(at, dst, n); return 1;
 }
@@ -121,7 +168,7 @@ int dmc_demo_open(const char *name,uint32_t *size) { (void)name;(void)size;retur
 void dmc_demo_read(uint32_t at,void *dst,uint32_t n) { (void)at;(void)dst;(void)n;km_fail("No external demo"); }
 
 // Synchronous LCD pump, retaining the engine's 320x240 column layout.
-static int px,py,ph,reps;
+static int px,py,ph,reps,pump_ui;
 static uint16_t column[240];
 void lcd_begin(int x0,int y0,int x1,int y1) { (void)x1;px=x0;py=y0;ph=y1-y0+1; }
 static int cy;
@@ -136,12 +183,11 @@ void lcd_fill(int x0,int y0,int x1,int y1,uint16_t c) {
     lcd_begin(x0,y0,x1,y1); for(int x=x0;x<=x1;x++) for(int y=y0;y<=y1;y++) lcd_push(c); lcd_end();
 }
 void pump_begin(int x0,int x1,int y0,int y1,int flags) {
-    lcd_begin(x0,y0,x1,y1); reps=(flags&PUMP_DOUBLE)?2:1;
+    lcd_begin(x0,y0,x1,y1); reps=(flags&PUMP_DOUBLE)?2:1;pump_ui=(flags&PUMP_UI)!=0;
 }
 void pump_submit(const uint8_t *p,int ncols) {
     for(int x=0;x<ncols;x++) {
-        for(int y=0;y<ph;y++) column[y]=pump_lut[p[x*ph+y]];
-        for(int r=0;r<reps;r++) km_column(px++,py,ph,column);
+        for(int r=0;r<reps;r++) km_index_column(px++,py,ph,p+x*ph,pump_ui);
     }
 }
 void pump_sync(int max) { (void)max; }
@@ -156,7 +202,7 @@ void I_InitGraphics(void) {}
 void I_StartFrame(void) {}
 void I_UpdateNoBlit(void) {}
 void I_FinishUpdate(void) {}
-void I_SetPalette(int p) { R_PaletteChanged();pal_read(p,pump_lut); }
+void I_SetPalette(int p) { R_PaletteChanged();pal_read(p,pump_lut);km_set_palette(pump_lut); }
 boolean D_WillBuildTic(void);
 void I_StartTic(void) {
     static uint32_t previous;
@@ -236,7 +282,9 @@ uint32_t plat_buttons(void) { return 0; }
 int plat_event(void) { return -1; }
 
 void km_doom_init(void) {
+    read_cache_reset();
     if(img_init()) km_fail("Upload matching E1M1 game data");
+    read_cache_reset();
     rc_place(km_engine_ram+16000);flat_place(NULL);flat_set_slots(0);
     dmc_set.always_run=1;
     V_Init();M_Init();R_Init();P_Init();S_Init(0);D_CheckNetGame();HU_Init();ST_Init();

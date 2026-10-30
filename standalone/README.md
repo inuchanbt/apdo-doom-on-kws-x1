@@ -1,8 +1,10 @@
-# Standalone Mini DOOM — experimental branch
+# Standalone Mini DOOM — widescreen branch
 
 This variant runs an original two-sector arena with Freedoom artwork entirely from the KWS-X1's internal application flash. It starts directly into the game, samples the physical buttons independently, and does not initialize USB or wait for a host. USB is needed only as a power source during play. The original Back+OK update loader remains available.
 
-Development branch: `codex/standalone-mini-doom`, based on the verified PC-linked v5 commit `79c28bf364c7cdac4a5630e5266672fbec20b4ac`. The first image installed with clean final loader acceptance and flasher exit 0 after one complete retry. The user confirmed power-only startup and physical controls on one Bootloader V1.1 unit, and reported very smooth gameplay. This is separate from the PC-linked E1M1 build.
+Development branch: `codex/standalone-widescreen`, based on standalone commit `546d560` and importing shared engine/display changes from the verified PC-wide checkpoint `fe61b00`. **Mini-wide v2 is installed and user-confirmed: power-only startup, full-width display/HUD, local controls and smooth gameplay.** Its full 240×135 output keeps natural proportions, about 106° horizontal FOV and a HUD distributed across the bottom.
+
+The earlier 4:3 mini image on `codex/standalone-mini-doom` installed with clean final loader acceptance and flasher exit 0 after one complete retry. The user confirmed power-only startup and physical controls on one Bootloader V1.1 unit, and reported very smooth gameplay. That feedback belongs to the earlier image, not a numeric benchmark of this wide build.
 
 ## What is in the first arena
 
@@ -36,7 +38,23 @@ Before creating an X1C, the script runs the real host engine, tests the actual R
 
 ## Storage and runtime
 
-The first pack is **144,320 bytes**, stored as **112,095 bytes** in 141 independent 1 KiB LZ4 pages, plus offsets/CRCs. Every page is internal; there is no fallback request to a PC. An 8 KiB decoded LRU cache serves arbitrary engine reads. Decode/CRC bounds are checked. The 180×135 framebuffer and black sidebars use the same display path as the PC port.
+The unchanged pack is **144,320 bytes**, stored as **112,095 bytes** in 141 independent 1 KiB LZ4 pages, plus offsets/CRCs. Every page is internal; there is no fallback request to a PC. An 8 KiB decoded LRU cache serves arbitrary engine reads, with a 4 KiB short-record cache in the engine. Decode/CRC bounds are checked.
+
+The full-width display uses 32,400 palette indices and a 512-byte RGB565 palette. Four rows are expanded per LCD DMA transfer. World, enemy, weapon, menu and HUD artwork retain their palette colors; horizontal projection, sprite scales and floor stepping compensate for the wide LCD. Menus retain their proportions in the middle, while complete HUD groups are spaced across the bottom. The C engine and firmware package use speed optimization; the power-only startup and local buttons stay separate from the PC adapters.
+
+### Wide v2 image
+
+`artifacts/mini/kws-x1-mini-wide-v2.X1C` passed full decompression/layout audit and flasher dry-run. SHA-256:
+
+```text
+e8352e4d4a0ceca482cff35fbbff179a469591ed151c0f29dbc98b10b5ddb7f7
+```
+
+Main application: **143,692 bytes**. Upper application: **140,176 bytes**, with **23,664 bytes free**. Update content free: **28,610 bytes**. SRAM2 uses **32,912 / 65,536 bytes**; the linked ordinary-RAM stack reservation is **34,184 bytes**. These are linked size budgets, not measured runtime stack headroom. The audit's IRQ list is exactly `[31,38,39,86,87,88]`, without a USB IRQ. Protected flash bounds are unchanged.
+
+The image subsequently installed on the Bootloader V1.1 unit with final loader acceptance, reboot command and flasher exit **0**. The PC asset/controller server was stopped before installation; no KWS-X1 DOOM CDC port appeared after the update. The user then confirmed power-only startup, complete full-width display/HUD, physical controls and smooth gameplay. See the [mini-wide v2 validation record](../docs/validation/mini-wide-v2.json).
+
+### Earlier 4:3 image
 
 The first audited image (`kws-x1-mini-v1r1.X1C`) installs 83,812 main-region bytes and 147,680 upper-region bytes, leaving 16,160 upper-region bytes free. Its compressed update contents leave 47,183 unused bytes inside the fixed container. The asset and installation budgets both fit; no protected flash range was expanded. Image SHA-256:
 
@@ -61,8 +79,10 @@ Mini firmware uses the same protected bootloader/application/upper-region bounds
 
 ## Offline evidence and limits
 
-The real engine ran 198 functional-test frames, consumed pistol ammo, killed both enemies, moved/turned the player, opened/closed the menu, and reproduced the complete HUD after a clear/redraw. The actual standalone asset reader matches the full pack and randomized crossing/eviction reads without any USB implementation. The normal PC test suite also passes after the shared build-helper changes.
+The wide engine ran 198 functional-test frames, consumed pistol ammo, killed both enemies, moved/turned the player, opened/closed the menu, and reproduced both canonical and indexed full-width HUD output after a clear/redraw. The actual production LCD mapper is attached to the engine's palette/column callbacks during the test, and its 240×135 captures show both LCD edges and intact HUD/menu output. Measured host projection FOV is 106.259765625°. These are functional checks, not MCU FPS measurements.
 
-Physical power-only startup and controls were subsequently confirmed by the user. FPS and runtime stack margin were not instrumented, and sustained stability was not tested. The original loader and reserved manufacturer data are not acquired as a complete flash backup.
+The actual standalone asset reader matches the full pack and 600 randomized crossing/eviction reads without any USB implementation. All eight mini reader/codec/control tests pass. The shared PC suite also passes: 15 Python controller tests, 15 Rust optimization/mapper tests, real engine/cadence/short-input tests, all 2,737 PC-pack codec pages and nine container regressions.
 
-The PC asset/controller server was stopped before installation, and no DOOM CDC interface appeared after the update, as expected for this firmware. See [the curated validation record](../docs/validation/mini-v1.json).
+Physical power-only startup, full-width display/HUD and controls of **wide v2 are user-confirmed**, with reported smooth gameplay. This is qualitative feedback: FPS and runtime stack margin are not instrumented, and sustained stability has not been tested. The original loader and reserved manufacturer data are not acquired as a complete flash backup.
+
+For the earlier 4:3 image, the PC asset/controller server was stopped before installation, and no DOOM CDC interface appeared after the update, as expected. See [the earlier validation record](../docs/validation/mini-v1.json).

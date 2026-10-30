@@ -7,7 +7,7 @@ try {
     if ($LASTEXITCODE) { throw 'Source verification failed' }
     & $env:KWS_PYTHON scripts\build-engine.py --host-test
     if ($LASTEXITCODE) { throw 'Host engine build failed' }
-    foreach ($taskTest in @('tests/test-engine.py','tests/test-short-input.py','tests/test-stream.py','scripts/make-codec-vectors.py')) {
+    foreach ($taskTest in @('tests/test-engine.py','tests/test-short-input.py','tests/test-input-cadence.py','tests/test-record-cache.py','tests/test-stream.py','scripts/make-codec-vectors.py')) {
         & $env:KWS_PYTHON $taskTest
         if ($LASTEXITCODE) { throw "Failed: $taskTest" }
     }
@@ -22,6 +22,13 @@ try {
     if ($LASTEXITCODE) { throw 'Optimization test build failed' }
     & .\artifacts\optimizations-test.exe --nocapture
     if ($LASTEXITCODE) { throw 'Optimization tests failed' }
+    $taskWideArgs=@('--edition=2024','--crate-type','cdylib','tests/wide-output.rs','-C','opt-level=2','-o','artifacts/wide-output.dll')
+    if ($env:CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER) { $taskWideArgs+=@('-C',"linker=$env:CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER") }
+    if ($env:APDO_LLVM_BIN) { $taskWideArgs+=@('-C',"dlltool=$env:APDO_LLVM_BIN\llvm-dlltool.exe") }
+    rustc @taskWideArgs
+    if ($LASTEXITCODE) { throw 'Wide LCD mapper build failed' }
+    & $env:KWS_PYTHON tests/test-wide-engine.py
+    if ($LASTEXITCODE) { throw 'Wide LCD engine checks failed' }
     cargo test --manifest-path vendor\kws-x1-standalone-rs\Cargo.toml --release --locked -p firmware-pack -p firmware-image -p flasher --target x86_64-pc-windows-gnu
     if ($LASTEXITCODE) { throw 'Container/flasher tests failed' }
     Write-Output 'All offline checks passed; no device accessed'

@@ -94,6 +94,18 @@ The installed device subsequently booted v5, completed its versioned handshake, 
 
 Unlike the clean v3/v4 updates, this v5 flasher process ended with Windows access violation `0xC0000005` (signed exit `-1073741819`) during final completion. All 26 batch checksums were accepted, but the final acceptance/reboot log was not captured. The later v5 boot, image-matching upper-region startup check, gameplay, rotation, and user confirmation establish subsequent application operation; this is not recorded as a clean flasher exit or an independent flash readback. See [validation/pc-v5.json](validation/pc-v5.json).
 
+## PC E1M1 performance branch (2026-10-31)
+
+v6 and v6r1 both installed with final bootloader acceptance, reboot command and flasher exit **0**. Each was measured over 180 stationary starting-area frames with preview disabled. Median engine/render/LCD time decreased from **166 ms (6.02 fps)** to **135 ms (7.41 fps)**; host-observed throughput increased from 5.73 to 7.02 fps. The v6r1 95th percentile was 163 ms, and minimum untouched stack observed was 9,896 bytes. These are sequential samples, not identical game-tic snapshots or a matched v5 benchmark.
+
+v6r1 also passed 20/20 10 ms Esc taps through local HTTP with native menu acknowledgement, input/release checks for forward/turn/fire/use, 180°/0° rotation acknowledgement and live frame capture. The final capture shows the scene and complete HUD. The automated checks ended with preview enabled and inputs released. The user subsequently confirmed normal on-device display and PC controls and reported smoother gameplay than before. This is qualitative confirmation, not an additional FPS or endurance measurement.
+
+The engine/cache/cadence regression suite passed, with frame hashes matching the uncached build. The updated decoder passed all 2,737 real pack pages and periodic overlap/truncation cases; all 13 Rust optimization tests passed at speed optimization level 2. Both images passed the full decompression/layout audit and flasher dry-run. See [implementation and image hashes](PC-PERFORMANCE.md), [v6 evidence](validation/pc-v6.json), and [v6r1 evidence](validation/pc-v6r1.json).
+
+## Wide LCD (2026-10-31)
+
+The wide v7r1 follow-up installed with final bootloader acceptance and exit 0. Its stationary 180-frame sample measured 158 ms median (6.33 fps), 188 ms p95 and 6.31 fps host throughput with preview disabled. Native/API short taps, input/release, rotation and 160×90 capture checks pass. The user subsequently confirmed complete full-width scene/HUD display, normal operation and responsive gameplay. This is qualitative feedback, not a further timing measurement. The wider view incurs more USB asset requests than v6r1; see [WIDESCREEN.md](WIDESCREEN.md) and [wide-v7r1 evidence](validation/wide-v7r1.json).
+
 ## Standalone mini arena
 
 The separate `codex/standalone-mini-doom` branch adds an original two-sector arena with two enemies, pistol/fist, ammo and a stimpack. Its complete converted pack is 144,320 bytes, stored internally as 112,095 compressed bytes in 141 independently decoded pages, with an 8 KiB decoded cache. No USB task or host handshake runs in the mini application.
@@ -103,6 +115,14 @@ The real host engine ran 198 functional-test frames, killed both enemies, consum
 The v1r1 image SHA-256 is `f6a0ae64f398cb81f9dde2931c974fbe33d88fc2f85ee37ef50052cce57dc23b`. It installs 83,812 main-region bytes and 147,680 upper-region bytes within the existing protected bounds. The first update pass received verification code 4; one complete automatic retry ended with final loader acceptance, reboot logged, and flasher exit 0.
 
 The PC asset server was stopped before the update, and no DOOM CDC interface appeared afterward. The user then confirmed startup and physical controls from power alone, reporting very smooth gameplay. This is qualitative feedback, not a measured FPS result. Runtime stack margin, long-duration stability and independent complete flash readback remain unverified. See [standalone build and scope](../standalone/README.md) and [validation/mini-v1.json](validation/mini-v1.json).
+
+## Standalone widescreen mini v2
+
+The `codex/standalone-widescreen` branch applies the verified PC-wide geometry and indexed LCD mapper to the fully internal mini arena. It uses 240×135 output, approximately 106° horizontal FOV and a redistributed complete HUD. The 144,320-byte pack and 112,095-byte compressed assets are unchanged.
+
+The real host engine passed 198 functional-test frames with movement, turning, firing, both enemies killed, menus and indexed full-width HUD redraw. Every internal pack byte and 600 crossing/eviction reads match; eight mini Rust tests and the shared PC regression suite pass. The image passed full decompression/layout audit and flasher dry-run, then installed with final loader acceptance, reboot command and exit **0**.
+
+With the PC asset server stopped and no DOOM CDC port enumerated, the user confirmed power-only startup, complete full-width display/HUD, local controls and smooth gameplay. This is qualitative feedback, not a measured FPS or endurance result. See [standalone details](../standalone/README.md) and [mini-wide v2 evidence](validation/mini-wide-v2.json).
 
 ## Limits
 

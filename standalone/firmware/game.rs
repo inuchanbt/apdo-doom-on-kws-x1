@@ -5,7 +5,7 @@ use core::sync::atomic::{AtomicU8,Ordering};
 pub static APPLIED:AtomicU8=AtomicU8::new(0);
 pub static MENU:core::sync::atomic::AtomicBool=core::sync::atomic::AtomicBool::new(false);
 #[unsafe(link_section = ".sram2.framebuffer")]
-static mut FRAME: [u16; 180 * 135] = [0; 180 * 135];
+static mut FRAME: crate::indexed_frame::Frame = crate::indexed_frame::Frame::new();
 unsafe extern "C" {
     fn km_doom_init();
     fn km_doom_step();
@@ -50,26 +50,32 @@ unsafe extern "C" fn km_flash_read(address: u32, dst: *mut u8, count: u32) {
     unsafe { crate::stream::read(address, dst, count as usize); }
 }
 
-// Uniform 9/16 downscale: full 320x240 picture -> 180x135, centered.
-// A source coordinate is kept when the floor mapping advances at its end.
+#[unsafe(no_mangle)]
+unsafe extern "C" fn km_set_palette(colors:*const u16) {
+    unsafe {(&mut *(&raw mut FRAME)).set_palette(core::slice::from_raw_parts(colors,256));}
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn km_index_column(x:i32,y:i32,height:i32,pixels:*const u8,ui:u32) {
+    assert!(height>=0);
+    unsafe {(&mut *(&raw mut FRAME)).column(x,y,core::slice::from_raw_parts(pixels,height as usize),ui!=0);}
+}
+// Compatibility for rare direct-color fills; game/UI columns stay indexed.
 #[unsafe(no_mangle)]
 unsafe extern "C" fn km_column(x: i32, y: i32, height: i32, pixels: *const u16) {
     if !(0..320).contains(&x) || y < 0 || height <= 0 || height > 240 - y { return; }
-    let dx = (x + 1) * 9 / 16;
-    if dx == x * 9 / 16 { return; }
-    for i in 0..height {
-        let sy = y + i;
-        let dy = (sy + 1) * 9 / 16;
-        if dy != sy * 9 / 16 {
-            unsafe { (&raw mut FRAME).cast::<u16>().add(((dy - 1) * 180 + dx - 1) as usize).write(pixels.add(i as usize).read().swap_bytes()); }
-        }
+    let frame=unsafe {&mut *(&raw mut FRAME)};
+    let mut indices=[0u8;240];
+    for i in 0..height as usize {
+        let color=unsafe {*pixels.add(i)};
+        indices[i]=frame.palette.iter().position(|&p|p==color.swap_bytes()).unwrap_or(0) as u8;
     }
+    frame.column(x,y,&indices[..height as usize],false);
 }
 
 pub async fn run() -> ! {
     // SRAM2 is NOLOAD: initialize every parity word before any DMA read.
     unsafe {
-        core::ptr::write_bytes((&raw mut FRAME).cast::<u16>(), 0, 180 * 135);
+        core::ptr::write_bytes(&raw mut FRAME, 0, 1);
         crate::stream::init();
         assert!(crate::panel::game_clear(crate::panel::Orientation::Normal).await);
     }
@@ -81,7 +87,7 @@ pub async fn run() -> ! {
         let orientation = crate::panel::Orientation::Normal;
         unsafe {
             km_doom_step();
-            assert!(crate::panel::game_flush((&raw const FRAME).cast(),orientation).await);
+            assert!(crate::panel::game_flush(&*(&raw const FRAME),orientation).await);
         }
         frames = frames.wrapping_add(1);
         crate::stream::frame(frames,start.elapsed().as_millis() as u32,

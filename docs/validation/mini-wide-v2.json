@@ -1,0 +1,47 @@
+{
+  "recorded_date": "2026-10-31",
+  "status": "installed and user-confirmed on one device",
+  "firmware_image_sha256": "e8352e4d4a0ceca482cff35fbbff179a469591ed151c0f29dbc98b10b5ddb7f7",
+  "standalone": true,
+  "pc_or_asset_server_required_during_play": false,
+  "runtime_usb_initialized": false,
+  "lcd_dimensions": [240, 135],
+  "horizontal_fov_degrees": 106.259765625,
+  "asset_pack_bytes": 144320,
+  "asset_pack_sha256": "101db65fe6cd8b6c58fb3324011f98bbcb870b512b31fbb3f16290d90d816d52",
+  "compressed_asset_bytes": 112095,
+  "compressed_asset_sha256": "be795ee83f0ec1729694d4a6962c3f70a9676e3bc973117ac6d535ce30ba1e71",
+  "linked_budget": {
+    "main_bytes": 143692,
+    "upper_bytes": 140176,
+    "upper_unused_bytes": 23664,
+    "update_unused_content_bytes": 28610,
+    "sram2_bytes": 32912,
+    "stack_reservation_bytes": 34184
+  },
+  "expected_custom_irqs": [31, 38, 39, 86, 87, 88],
+  "offline_checks": {
+    "host_frames": 198,
+    "host_kills": 2,
+    "host_final_health": 100,
+    "host_final_ammo": 38,
+    "movement_turn_shoot_menu": "pass",
+    "production_240x135_mapper_and_hud_redraw": "pass",
+    "all_internal_pack_bytes_and_600_crossing_reads": "pass",
+    "mini_reader_codec_control_tests": 8,
+    "shared_python_controller_tests": 15,
+    "shared_rust_optimization_mapper_tests": 15,
+    "container_regressions": 9,
+    "full_decompression_layout_audit": "pass",
+    "flasher_dry_run": "pass"
+  },
+  "device_checks": {
+    "installation": "bootloader accepted image and reboot command sent",
+    "flasher_exit_code": 0,
+    "pc_asset_server_stopped_before_installation": true,
+    "kws_doom_cdc_ports_observed_after_update": 0,
+    "power_only_startup": "user confirmed after reconnecting power only",
+    "physical_display_controls_and_feel": "user confirmed complete full-width display/HUD, normal physical controls and smooth gameplay"
+  },
+  "scope": "Host rendering, offline image checks, clean loader completion and user power-only/visual/control confirmation on one unit. Smoothness feedback is qualitative; MCU FPS and runtime stack headroom are not instrumented. No endurance qualification or independent full flash readback."
+}

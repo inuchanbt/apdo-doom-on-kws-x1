@@ -80,6 +80,9 @@ embassy-executor-timer-queue = { git = "https://github.com/embassy-rs/embassy.gi
 embassy-sync = { git = "https://github.com/embassy-rs/embassy.git", rev = "c2413d5994bbd8b7e6d5975fd49e6427cb903a02" }
 embassy-usb = { git = "https://github.com/embassy-rs/embassy.git", rev = "c2413d5994bbd8b7e6d5975fd49e6427cb903a02" }
 embassy-usb-driver = { git = "https://github.com/embassy-rs/embassy.git", rev = "c2413d5994bbd8b7e6d5975fd49e6427cb903a02" }
+
+[profile.release.package.firmware]
+opt-level = 2
 '''
 edited('Cargo.toml', workspace)
 edited('Cargo.lock', (ROOT / 'locks/board.Cargo.lock').read_text())
@@ -90,7 +93,7 @@ build = original('firmware/build.rs').replace('    Ok(())', '''    let engine = 
     println!("cargo:rerun-if-changed={}", engine.join("libkmdoom.a").display());
     Ok(())''')
 edited('firmware/build.rs', build)
-memory = original('firmware/memory.x').replace('    __supper = .;', '    __supper = .;\n    *(.text.P_* .text.R_*);\n    *(.upper.assets);')
+memory = original('firmware/memory.x').replace('    __supper = .;', '    __supper = .;\n    *(.text.P_*);\n    *(.upper.assets);')
 edited('firmware/memory.x', memory)
 edited('firmware/src/panel.rs', original('firmware/src/panel.rs') + '\ninclude!("panel_extension.rs");\n')
 custom_irqs = ('const CUSTOM_IRQS: [usize; 6] = [31, 38, 39, 86, 87, 88];' if args.mini

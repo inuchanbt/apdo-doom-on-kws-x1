@@ -26,6 +26,11 @@ try {
     if ($LASTEXITCODE) {throw 'Mini adapter staging failed'}
     & $env:KWS_PYTHON scripts\build-engine.py --host-test --generated artifacts\mini\gen --output artifacts\mini\host-engine
     if ($LASTEXITCODE) {throw 'Mini host engine build failed'}
+    $taskWideArgs=@('--edition=2024','--crate-type','cdylib','tests/wide-output.rs','-C','opt-level=2','-o',"$taskMini\wide-output.dll")
+    if ($env:CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER) {$taskWideArgs+=@('-C',"linker=$env:CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER")}
+    if ($env:APDO_LLVM_BIN) {$taskWideArgs+=@('-C',"dlltool=$env:APDO_LLVM_BIN\llvm-dlltool.exe")}
+    rustc @taskWideArgs
+    if ($LASTEXITCODE) {throw 'Mini wide LCD mapper build failed'}
     & $env:KWS_PYTHON standalone\test-mini.py
     if ($LASTEXITCODE) {throw 'Mini real-engine verification failed'}
     $taskRustArgs=@('--edition=2024','--test','tests/mini-assets.rs','-o',"$taskMini\asset-reader-test.exe")

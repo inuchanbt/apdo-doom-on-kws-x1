@@ -39,7 +39,8 @@ def receive_image(port, frame):
     header=read_exact(port,24)
     if header[:4]!=b'IMG4': raise ValueError('Missing capture header')
     number,width,height,length,crc=struct.unpack('<IIIII',header[4:])
-    if (number,width,height,length)!=(frame,120,90,21600): raise ValueError('Invalid capture dimensions or frame')
+    if number!=frame or (width,height,length) not in ((120,90,21600),(160,90,28800)):
+        raise ValueError('Invalid capture dimensions or frame')
     pixels=read_exact(port,length)
     if zlib.crc32(pixels)!=crc: raise ValueError('Capture CRC mismatch')
     return dict(game_frame=number,width=width,height=height,pixels=pixels)

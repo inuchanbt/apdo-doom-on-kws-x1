@@ -2,15 +2,15 @@
 
 [English](README.md) · [日本語](README.ja.md)
 
-**Standalone development branch:** this branch adds a tiny internal-flash arena in [standalone/](standalone/README.md), with power-only startup and physical controls confirmed on one unit. It has separate data/build outputs. The PC-linked v5 workflow below remains available; this branch has not been merged into `main`.
+**Standalone widescreen development branch:** mini-wide v2 uses the full **240×135 LCD**, about **106° horizontal FOV**, natural proportions and a redistributed HUD. The user confirmed power-only startup, complete display/HUD, physical controls and smooth gameplay. All assets are internal; no PC server is needed. Offline tests and image audit pass, and the loader accepted the update with exit 0. See [standalone build, image and controls](standalone/README.md). This branch has not been merged into `main`.
 
-**The KOWSI KWS-X1 USB-C power meter runs DOOM.** The standalone mini arena runs on its HC32F460 using assets stored in internal flash. **During play it only needs power; no PC or asset server is required.** Power-only startup and physical controls have been confirmed on hardware.
+**The KOWSI KWS-X1 USB-C power meter runs DOOM.** The standalone mini arena runs on its HC32F460 using assets stored in internal flash. **During play it only needs power; no PC or asset server is required.** The wide version's power-only startup, display and local controls were confirmed on one Bootloader V1.1 unit.
 
 Build the standalone version with `./scripts/build-mini.ps1` after preparing the tools and sources; see the [standalone build and controls](standalone/README.md). It contains a small custom arena with two enemies. Sound, saves, map progression, Web controls and runtime LCD rotation are not included in this variant.
 
-The **PC-linked v5 variant**, also available in this branch, runs Freedoom E1M1 with assets streamed from a USB-connected PC. It requires that PC during play and offers browser controls, preview and LCD rotation. The following historical hardware measurements and PC setup instructions refer to that variant unless stated otherwise.
+The **PC-linked E1M1 variant**, also available in this branch, streams assets from a USB-connected PC and offers browser controls, preview and LCD rotation. Its shared engine/display helpers include the verified PC-wide changes. The following historical hardware measurements and PC setup instructions refer to the PC-linked variant unless stated otherwise. See [PC performance](docs/PC-PERFORMANCE.md) and [widescreen geometry and results](docs/WIDESCREEN.md).
 
-## Verified on hardware
+## Historical PC-linked hardware results
 
 | Item | Result |
 | --- | --- |
@@ -47,7 +47,7 @@ A [standalone size study](docs/STANDALONE-FEASIBILITY.md) records the earlier in
 
 Buttons are sampled every 5 ms, with debouncing and a bounded edge queue so short presses survive slow rendered frames.
 
-## Play from the PC (v4/v5)
+## Play from the PC (PC-linked variant)
 
 After building and installing the current firmware, start the controller:
 
@@ -67,11 +67,11 @@ Keep the server running and open its printed local URL. Click **Enable keyboard*
 
 The page also has holdable pointer/touch buttons. **Release all** clears PC input while continuing asset delivery. Switching away from the page releases the keys and disables keyboard capture. Press **Enable keyboard** again when returning.
 
-The preview is **120×90, at most one capture per second**; the meter still renders at its own rate. Disable **Live preview** to prioritize gameplay speed, or use **Save frame** to download the latest BMP. The meter FPS shown on the page includes preview transfer pauses. The v3 benchmark above remains a separate historical measurement.
+The wide preview is **160×90, at most one capture per second** (120×90 for earlier 4:3 firmware); the meter still renders at its own rate. Disable **Live preview** to prioritize gameplay speed, or use **Save frame** to download the latest BMP. The meter FPS shown on the page includes preview transfer pauses. The v3 benchmark above remains a separate historical measurement.
 
 The preview is inset into the supplied KWS-X1 enclosure photograph. On v5, **Rotate LCD 180°** rotates the real meter display at a frame boundary and waits for device confirmation. Choose **Follow LCD · upright game** to turn the enclosure around the upright preview, or **Fixed enclosure · LCD view** to show how the LCD looks in the stationary enclosure. Rotation keeps input mappings unchanged and resets on power-up. Saved BMPs retain the upright logical frame.
 
-Use **Enlarge preview** for a larger view without the enclosure, useful for inspecting menus. It enlarges the same 120×90 capture; it does not restore detail lost at capture resolution. Opening it releases PC keys. **Close** or Esc returns to the controls; enable the keyboard again to continue playing.
+Use **Enlarge preview** for a larger view without the enclosure, useful for inspecting menus. It enlarges the same 160×90 wide capture (120×90 for earlier firmware); it does not restore detail lost at capture resolution. Opening it releases PC keys. **Close** or Esc returns to the controls; enable the keyboard again to continue playing.
 
 The controller supplies assets and owns the USB port: stop any other asset server first. It recognizes v4's `KWSX1DOOM04` and v5's `KWSX1DOOM05` serial strings; rotation is disabled on v4. Older firmware needs an update. `-NoBrowser`, `-Port 8080`, and `-UsbPort COM6` are optional launcher arguments. **Stop server** also ends asset delivery; restart the server and power-cycle the meter to play again. See [PC controls and protocol](docs/PC-CONTROLS.md) for details and verification limits.
 

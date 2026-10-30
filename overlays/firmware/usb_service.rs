@@ -69,7 +69,7 @@ pub async fn task() {
                             crc=crate::control::crc_update(crc,&pixels[..n]);
                         }
                         let mut header=[0u8;24];header[..4].copy_from_slice(b"IMG4");
-                        for (out,value) in header[4..].chunks_exact_mut(4).zip([number,120,90,crate::preview::BYTES as u32,!crc]) {out.copy_from_slice(&value.to_le_bytes());}
+                        for (out,value) in header[4..].chunks_exact_mut(4).zip([number,crate::preview::WIDTH as u32,crate::preview::HEIGHT as u32,crate::preview::BYTES as u32,!crc]) {out.copy_from_slice(&value.to_le_bytes());}
                         assert!(class.write_packet(&header).await.is_ok());
                         for offset in (0..crate::preview::BYTES).step_by(64) {
                             let n=(crate::preview::BYTES-offset).min(64);

@@ -18,7 +18,7 @@ ROOT=Path(__file__).resolve().parents[1]
 def frame_bmp(image):
     width,height=image['width'],image['height']
     pixels=image['pixels']
-    if (width,height)!=(120,90) or len(pixels)!=width*height*2:
+    if (width,height) not in ((120,90),(160,90)) or len(pixels)!=width*height*2:
         raise ValueError('Invalid captured frame')
     stride=(width*2+3)&~3
     raw=b''.join(pixels[y*width*2:(y+1)*width*2]+bytes(stride-width*2) for y in range(height))
@@ -118,7 +118,7 @@ class Bridge:
             now=self.clock();self.snapshot_id+=1
             rate=1/(now-self.last_image) if self.last_image and now>self.last_image else 0
             self.last_image=now;self.bitmap=bitmap
-            self.screen=dict(width=120,height=90,game_frame=image['game_frame'],snapshot=self.snapshot_id,preview_fps=rate)
+            self.screen=dict(width=image['width'],height=image['height'],game_frame=image['game_frame'],snapshot=self.snapshot_id,preview_fps=rate)
 
     def set_preview(self,enabled):
         with self.lock:

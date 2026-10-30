@@ -1,0 +1,26 @@
+{
+  "recorded_date": "2026-10-31",
+  "device_count": 1,
+  "bootloader": "V1.1",
+  "firmware_image_sha256": "aafcd12456d43617bee677cb714b2612a2350b553b285bdb1f5771724cfd3aba",
+  "bootloader_accepted": true,
+  "reboot_command_sent": true,
+  "flasher_exit_code": 0,
+  "game_handshake_and_live_preview": "pass",
+  "measurement": {
+    "scene": "E1M1 starting area, stationary, no menu",
+    "frames": 180,
+    "frame_range": [484, 663],
+    "preview_enabled": false,
+    "median_frame_ms": 166,
+    "fps_from_median": 6.024096385542169,
+    "wall_fps": 5.730750760364975,
+    "p95_frame_ms": 195,
+    "median_usb_wait_ms": 4,
+    "median_decoded_pages": 838,
+    "minimum_untouched_stack_bytes": 9848,
+    "all_local_and_remote_input_masks_zero": true
+  },
+  "preview_restored_after_measurement": true,
+  "scope": "One-unit observation, not a matched v5 comparison. Physical display/controls were not user-confirmed in this sample. The subsequent v6r1 update has a separate validation record."
+}

@@ -13,7 +13,7 @@ Use W/S or Up/Down for forward/backward, A/D or Left/Right for turning, Space/Ct
 
 **Release all** clears PC input while keeping the game assets flowing. Changing tabs/windows, hiding the page, and leaving the page also release PC input and disable keyboard capture. Click **Enable keyboard** again to resume. Browser delivery can be interrupted, so the server and firmware additionally expire stale input. A release takes effect when the game next reads input.
 
-**Live preview** requests a 120×90 RGB565 capture at most once per second. The meter renders its own 180×135 LCD view at an independent rate. Preview transfer blocks the next native frame briefly; disable it to prioritize local play. **Save frame** downloads the latest capture as a BMP. Pausing preview keeps the last image available. The page's Meter FPS uses frame-counter progress over wall time, including preview/control pauses; engine milliseconds exclude those pauses.
+**Live preview** requests a 160×90 RGB565 capture for the 240×135 wide LCD view, or 120×90 for the earlier 180×135 view, at most once per second. The meter renders independently. Preview transfer blocks the next native frame briefly; disable it to prioritize local play. **Save frame** downloads the latest capture as a BMP. Pausing preview keeps the last image available. The page's Meter FPS uses frame-counter progress over wall time, including preview/control pauses; engine milliseconds exclude those pauses.
 
 **Enlarge preview** opens a modal with a larger, upright view of the same logical frame, without the enclosure. This is an enlargement, not a higher-resolution capture. Opening it releases remote input and disables keyboard capture; the enlarged image continues updating. Close it with **Close** or Esc, then re-enable the keyboard to resume input. Esc while this modal is open closes the modal rather than opening the game's menu.
 
@@ -66,7 +66,7 @@ At each completed LCD frame, the meter sends:
 
 `CTL4` masks use Fire=1, Forward=2, TurnLeft=4, TurnRight=8, Use=16, Menu=32, Confirm=64, Backward=128. Flags are Preview=1 and Clear=2; other flags are rejected. Count must be 0–8, held mask 0–255, and lease 100–1000 ms. Clear discards queued/held input. Each event is an ordered complete input state, not a key number. Frame echo and CRC are checked before applying input.
 
-`IMG4` must be exactly 120×90/21,600 bytes. The host validates dimensions, frame echo, and pixel CRC before publishing it. The firmware leaves the main game task at its frame handoff until the transfer finishes. It samples the frozen framebuffer twice in 64-byte chunks (CRC, then payload), allocating no second framebuffer. The source's LCD wire byte order is converted to RGB565 little-endian for the PC.
+`IMG4` accepts exactly 120×90/21,600 bytes for the legacy view or 160×90/28,800 bytes for the wide prototype. The host validates dimensions, frame echo, and pixel CRC before publishing it. The firmware leaves the main game task at its frame handoff until the transfer finishes. It samples the frozen framebuffer twice in 64-byte chunks (CRC, then payload), allocating no second framebuffer. The source's LCD wire byte order is converted to RGB565 little-endian for the PC. The wide prototype requires restarting the updated server; see [WIDESCREEN.md](WIDESCREEN.md).
 
 ## v5 protocol extension
 
