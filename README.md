@@ -6,6 +6,10 @@
 
 The game runs on the meter. **A PC connection is required during play.** Browser keyboard/pointer controls and a switchable, low-rate preview of the actual device framebuffer are available. v5 adds an enclosure mockup and real LCD rotation through 180 degrees. Physical buttons remain available.
 
+This branch adapts KM003C performance improvements for PC-connected E1M1: faster compilation, a small record cache, reduced stale-input queuing and faster asset decoding. v6r1 measured **135 ms per frame (7.4 fps)** in a 180-frame starting-area sample with preview disabled; wall throughput was 7.0 fps. See [changes, measurements and verification scope](docs/PC-PERFORMANCE.md).
+
+The user confirmed normal on-device display and PC controls, and smoother gameplay than before.
+
 ## Verified on hardware
 
 | Item | Result |
@@ -26,7 +30,7 @@ The initial v2 sample measured 1,174 ms per frame and 669 ms of USB wait. v3 mea
 
 No sound, saves, persistent game settings, or supported map transition is included. Meter measurement, PD, and QC tasks do not run. Use the PC's data-capable USB connection and leave other equipment disconnected.
 
-A [standalone size study](docs/STANDALONE-FEASIBILITY.md) measures reduced E1M1 assets and the internal-flash budget. A small dedicated map is a possible follow-up; standalone gameplay has not been implemented.
+The separate [standalone mini-DOOM branch](https://github.com/inuchanbt/apdo-doom-on-kws-x1/tree/codex/standalone-mini-doom) contains a small dedicated map confirmed to boot and play on power alone. This branch keeps the full, PC-connected E1M1 version.
 
 ## Controls
 

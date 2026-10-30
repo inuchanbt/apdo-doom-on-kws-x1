@@ -80,6 +80,8 @@ The script:
 
 No build step opens USB. The firmware starts at `0x10000`; selected engine functions and pinned asset pages occupy the existing upper application region. The packer computes the earliest sector-aligned stream position that preserves unread compressed data during unpacking. It retains the upstream erase-margin guard, rehearses the same decoder used by the device, and compares the full decompressed output with both linked regions.
 
+On the PC performance branch, the C engine defaults to `-O2`, a 4 KiB short-record cache and input sampling before simulation. Render functions use main flash to leave room for pinned assets in upper flash. The firmware package also uses Rust `opt-level=2` for asset decoding/page lookup; dependencies retain the upstream size profile. Comparison flags and measured size/replay results are documented in [PC-PERFORMANCE.md](PC-PERFORMANCE.md).
+
 See [RECOVERY.md](RECOVERY.md) for the separate device-update procedure.
 
 ## 5. Offline validation
@@ -91,5 +93,7 @@ See [RECOVERY.md](RECOVERY.md) for the separate device-update procedure.
 This runs the real host engine for 140 frames, verifies asset protocol framing and failure handling, round-trips every Freedoom page through the Python encoder and Rust decoder, checks cache allocation/eviction, replays engine reads, and runs the board packer's/container tests. v4 also checks local HTTP input/session boundaries, queued/expired controls, BMP output, fragmented asset/control/preview traffic, and firmware preview sampling. The HTTP tests briefly listen and connect on loopback; USB is never opened. Cargo may download locked dependencies on the first run; after fetching them, `CARGO_NET_OFFLINE=true` can enforce offline dependency use.
 
 A separate real-engine regression fills the tic-command buffer, queues a short forward press/release at the rejected-poll boundary, and verifies that the input survives and moves the player.
+
+The performance branch also tests turn press/release after a simulated 100 ms draw, and checks the short-record cache against actual pack bytes at line/EOF boundaries and across 140 real game frames.
 
 These checks do not emulate the MCU, panel, USB controller, or bootloader. See [VALIDATION.md](VALIDATION.md) for the actual hardware evidence and its limits.

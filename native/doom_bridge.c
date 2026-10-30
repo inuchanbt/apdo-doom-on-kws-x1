@@ -56,8 +56,53 @@ volatile struct pump_stats pump_stats;
 volatile struct nor_stats nor_stats;
 FILE *stderr, *stdout;
 
-// Every read shares one synchronous QSPI owner with display writes.
-void nor_read(uint32_t at, void *dst, uint32_t n) { km_flash_read(at, dst, n); }
+// Small map/actor records otherwise repeatedly cross the C/Rust boundary and
+// evict decoded 1 KiB pages. Keep only short reads; columns and flats bypass it.
+#ifndef KM_CACHE_KIB
+#define KM_CACHE_KIB 4
+#endif
+#if KM_CACHE_KIB
+#define READ_LINE 16u
+#define READ_WAYS 4u
+#define READ_SETS (KM_CACHE_KIB*1024u/(READ_LINE*READ_WAYS))
+static uint8_t read_data[READ_SETS][READ_WAYS][READ_LINE];
+static uint32_t read_tag[READ_SETS][READ_WAYS];
+static uint8_t read_mru[READ_SETS];
+static void read_cache_reset(void) {
+    memset(read_tag,0xff,sizeof(read_tag));
+    memset(read_mru,0,sizeof(read_mru));
+}
+#else
+static void read_cache_reset(void) {}
+#endif
+void nor_read(uint32_t at, void *dst, uint32_t n) {
+#if KM_CACHE_KIB
+    // Before img_init has read the header, only the fixed header is readable.
+    uint32_t end=img.size?img.size:DMC_HEADER_SIZE;
+    if(at>end || n>end-at)km_fail("Game data out of range");
+    if(n>READ_LINE) { km_flash_read(at,dst,n);return; }
+    uint8_t *out=dst;
+    while(n) {
+        uint32_t base=at&~(READ_LINE-1),set=base/READ_LINE%READ_SETS;
+        unsigned way;
+        for(way=0;way<READ_WAYS;way++)if(read_tag[set][way]==base)break;
+        if(way==READ_WAYS) {
+            way=(read_mru[set]+1)%READ_WAYS;
+            uint32_t count=end-base;
+            if(count>READ_LINE)count=READ_LINE;
+            km_flash_read(base,read_data[set][way],count);
+            read_tag[set][way]=base;
+        }
+        read_mru[set]=way;
+        uint32_t offset=at-base,count=READ_LINE-offset;
+        if(count>n)count=n;
+        memcpy(out,read_data[set][way]+offset,count);
+        out+=count;at+=count;n-=count;
+    }
+#else
+    km_flash_read(at,dst,n);
+#endif
+}
 int nor_read_async(uint32_t at, void *dst, uint32_t n, int prio) {
     (void)prio; nor_read(at, dst, n); return 1;
 }
@@ -236,7 +281,9 @@ uint32_t plat_buttons(void) { return 0; }
 int plat_event(void) { return -1; }
 
 void km_doom_init(void) {
+    read_cache_reset();
     if(img_init()) km_fail("Upload matching E1M1 game data");
+    read_cache_reset();
     rc_place(km_engine_ram+16000);flat_place(NULL);flat_set_slots(0);
     dmc_set.always_run=1;
     V_Init();M_Init();R_Init();P_Init();S_Init(0);D_CheckNetGame();HU_Init();ST_Init();

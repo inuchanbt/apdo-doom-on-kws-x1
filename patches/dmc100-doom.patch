@@ -1,3 +1,28 @@
+diff --git a/engine/d_loop.c b/engine/d_loop.c
+--- a/engine/d_loop.c
++++ b/engine/d_loop.c
+@@ -255,6 +255,8 @@ void TryRunTics (void)
+         RunTic(&ticdata[gametic % BACKUPTICS]);
+ 	gametic++;
+ 
++#ifndef KM_INPUT_AT_FRAME
+ 	NetUpdate ();	// check for new console commands
++#endif
+     }
+ }
+diff --git a/engine/d_main.c b/engine/d_main.c
+--- a/engine/d_main.c
++++ b/engine/d_main.c
+@@ -228,7 +228,9 @@ void D_Display (void)
+ 
+     // menus go directly to the screen
+     M_Drawer ();          // menu is drawn even on top of everything
++#ifndef KM_INPUT_AT_FRAME
+     NetUpdate ();         // send out any new accumulation
++#endif
+ 
+     // The melt wipe is not drawn. Its setup takes one M_Random value
+     // per screen column, take the same values to keep rndindex in step.
 diff --git a/tools/conv/upstream.py b/tools/conv/upstream.py
 index 28d955d..2a472b8 100644
 --- a/tools/conv/upstream.py

@@ -7,7 +7,7 @@ try {
     if ($LASTEXITCODE) { throw 'Source verification failed' }
     & $env:KWS_PYTHON scripts\build-engine.py --host-test
     if ($LASTEXITCODE) { throw 'Host engine build failed' }
-    foreach ($taskTest in @('tests/test-engine.py','tests/test-short-input.py','tests/test-stream.py','scripts/make-codec-vectors.py')) {
+    foreach ($taskTest in @('tests/test-engine.py','tests/test-short-input.py','tests/test-input-cadence.py','tests/test-record-cache.py','tests/test-stream.py','scripts/make-codec-vectors.py')) {
         & $env:KWS_PYTHON $taskTest
         if ($LASTEXITCODE) { throw "Failed: $taskTest" }
     }

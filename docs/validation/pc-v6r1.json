@@ -1,0 +1,48 @@
+{
+  "recorded_date": "2026-10-31",
+  "device_count": 1,
+  "bootloader": "V1.1",
+  "firmware_image_sha256": "4342c3b43ee7633038209333f6a14f78a6113c767a9824792bfa27f54ef5250d",
+  "bootloader_accepted": true,
+  "reboot_command_sent": true,
+  "flasher_exit_code": 0,
+  "protocol": 5,
+  "game_handshake_and_live_preview": "pass",
+  "measurement": {
+    "scene": "E1M1 starting area, stationary, no menu",
+    "frames": 180,
+    "frame_range": [335, 514],
+    "preview_enabled": false,
+    "median_frame_ms": 135,
+    "fps_from_median": 7.407407407407407,
+    "wall_fps": 7.019607843137255,
+    "p95_frame_ms": 163,
+    "median_usb_wait_ms": 3,
+    "median_decoded_pages": 837.5,
+    "minimum_untouched_stack_bytes": 9896,
+    "all_local_and_remote_input_masks_zero": true
+  },
+  "functional_checks": {
+    "http_10ms_esc_taps_sent": 20,
+    "native_menu_toggles_acknowledged": 20,
+    "observed_command_to_menu_telemetry_ms_range": [156, 391],
+    "forward_left_right_fire_use": "applied input telemetry acknowledged and released",
+    "rotation_acknowledged_degrees": [180, 0],
+    "live_bmp_before_and_after_controls": "pass",
+    "final_preview_enabled": true,
+    "final_rotation_degrees": 0,
+    "final_menu_active": false,
+    "final_applied_buttons": 0,
+    "physical_display_and_browser_feel": "user confirmed normal display and controls, and smoother gameplay than before"
+  },
+  "offline": {
+    "engine_140_frame_hashes_match_uncached": true,
+    "full_tic_buffer_short_press": "pass",
+    "slow_draw_input_cadence": "pass",
+    "all_2737_pages_decode_exactly": true,
+    "rust_optimization_tests_at_opt_level_2": 13,
+    "full_decompression_audit": "pass",
+    "flasher_dry_run": "pass"
+  },
+  "scope": "One-device sequential starting-area runs, not identical game-tic snapshots or a matched v5 benchmark. HTTP input checks do not establish browser event timing. No independent full flash readback."
+}

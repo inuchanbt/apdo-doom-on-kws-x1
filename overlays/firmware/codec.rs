@@ -28,7 +28,24 @@ pub fn decode(input: &[u8], output: &mut [u8]) -> Result<(), ()> {
         if offset == 0 || offset > out { return Err(()); }
         let matched = length(input, &mut at, (token & 15) as usize)?.checked_add(4).ok_or(())?;
         if matched > output.len() - out { return Err(()); }
-        for _ in 0..matched { output[out] = output[out-offset]; out += 1; }
+        // Seed a non-overlapping prefix, then duplicate initialized bytes in
+        // growing chunks. Byte-at-a-time overlap copies dominate decode time
+        // on the Cortex-M4 when hundreds of 1 KiB pages miss the hot cache.
+        let (past,future)=output.split_at_mut(out);
+        let future=&mut future[..matched];
+        if offset==1 {
+            future.fill(past[out-1]);
+        } else {
+            let mut copied=offset.min(matched);
+            future[..copied].copy_from_slice(&past[out-offset..out-offset+copied]);
+            while copied<matched {
+                let (seed,tail)=future.split_at_mut(copied);
+                let n=seed.len().min(tail.len());
+                tail[..n].copy_from_slice(&seed[..n]);
+                copied+=n;
+            }
+        }
+        out+=matched;
     }
     if out == output.len() { Ok(()) } else { Err(()) }
 }
@@ -49,5 +66,30 @@ mod tests {
             assert!(decode(input, &mut [0;1024]).is_err());
         }
         assert!(decode(&[0x10,1,1,0], &mut [0;3]).is_err());
+    }
+    #[test]
+    fn periodic_matches_cover_short_long_and_unaligned_offsets() {
+        fn extra(bytes:&mut Vec<u8>,mut n:usize) {
+            while n>=255 {bytes.push(255);n-=255;}
+            bytes.push(n as u8);
+        }
+        for offset in [1usize,2,3,4,7,15,16,17,255,256,511] {
+            for matched in [4usize,7,16,18,19,20,255,512,1023] {
+                let mut block=vec![(offset.min(15) as u8)<<4 | (matched-4).min(15) as u8];
+                if offset>=15 {extra(&mut block,offset-15);}
+                let seed:Vec<u8>=(0..offset).map(|i|(i%251) as u8).collect();
+                block.extend_from_slice(&seed);
+                block.extend_from_slice(&(offset as u16).to_le_bytes());
+                if matched>=19 {extra(&mut block,matched-19);}
+                let expected:Vec<u8>=seed.iter().copied().cycle().take(offset+matched).collect();
+                // Equal lengths denote a raw block in this wire format.
+                if block.len()==expected.len() {continue;}
+                let mut output=vec![0;expected.len()];
+                decode(&block,&mut output).unwrap();
+                assert_eq!(output,expected,"offset={offset}, matched={matched}");
+                let short=expected.len()-if block.len()==expected.len()-1 {2}else{1};
+                assert!(decode(&block,&mut output[..short]).is_err());
+            }
+        }
     }
 }
