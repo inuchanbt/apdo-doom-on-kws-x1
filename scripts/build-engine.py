@@ -3,13 +3,20 @@
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 import os
+import argparse
 import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / 'vendor/dmc100-doom'
-HOST = '--host-test' in sys.argv
-OUT = ROOT / ('artifacts/host-engine' if HOST else 'artifacts/engine')
+parser=argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--host-test',action='store_true')
+parser.add_argument('--generated',type=Path,default=SRC/'gen')
+parser.add_argument('--output',type=Path)
+args=parser.parse_args()
+HOST=args.host_test
+GEN=args.generated.resolve()
+OUT = (args.output or ROOT / ('artifacts/host-engine' if HOST else 'artifacts/engine')).resolve()
 LLVM = Path(os.environ.get('APDO_LLVM_BIN', ROOT / 'tools/llvm-mingw-20261020-ucrt-x86_64/bin'))
 OUT.mkdir(parents=True, exist_ok=True)
 excluded = {'am_map.c', 'w_wad.c', 'w_file.c', 'z_zone.c'}
@@ -20,10 +27,10 @@ for folder in ['port/data', 'port/render', 'port/obj', 'port/math']:
 sources += [SRC / p for p in ['port/game/fe_glue.c', 'port/game/l_menu.c',
     'port/game/l_wi.c', 'port/game/l_finale.c', 'port/game/i_input.c',
     'port/game/libc_dmc.c', 'platform/rt.c', 'platform/text.c', 'platform/font8x8.c']]
-sources += list((SRC / 'gen').glob('*.c'))
+sources += list(GEN.glob('*.c'))
 sources += [ROOT / 'native/doom_bridge.c']
 includes = ['engine/stub/include', 'engine', 'port/data', 'port/render', 'port/obj',
-            'port/math', 'platform', 'port/game', 'port/ovl', 'gen']
+            'port/math', 'platform', 'port/game', 'port/ovl']
 flags = ['--target=thumbv7em-none-eabihf', '-mcpu=cortex-m4', '-mthumb',
          '-mfpu=fpv4-sp-d16', '-mfloat-abi=hard', '-Oz', '-std=gnu11',
          '-ffreestanding', '-fno-common', '-fno-builtin', '-fwrapv', '-fsigned-char',
@@ -32,6 +39,7 @@ flags = ['--target=thumbv7em-none-eabihf', '-mcpu=cortex-m4', '-mthumb',
 if HOST:
     flags = flags[5:]
     sources += [ROOT/'native/host_harness.c']
+flags += ['-I',str(GEN)]
 for inc in includes:
     flags += ['-I', str(SRC / inc)]
 

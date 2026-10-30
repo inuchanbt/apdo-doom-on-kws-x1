@@ -1,0 +1,37 @@
+{
+  "recorded_date": "2026-10-30",
+  "branch": "codex/standalone-mini-doom",
+  "base_commit": "79c28bf364c7cdac4a5630e5266672fbec20b4ac",
+  "image_sha256": "f6a0ae64f398cb81f9dde2931c974fbe33d88fc2f85ee37ef50052cce57dc23b",
+  "pack_bytes": 144320,
+  "internal_compressed_asset_bytes": 112095,
+  "asset_pages": 141,
+  "installed_main_bytes": 83812,
+  "installed_upper_bytes": 147680,
+  "unused_upper_bytes": 16160,
+  "unused_update_content_bytes": 47183,
+  "offline_checks": {
+    "real_engine_frames": 198,
+    "enemy_kills": 2,
+    "final_ammo": 38,
+    "final_health": 100,
+    "movement_turn_menu_hud": "pass",
+    "full_internal_reader_byte_comparison": "pass",
+    "cross_page_eviction_reads": 600,
+    "mini_rust_tests": 7,
+    "pc_variant_regression_suite": "pass",
+    "full_image_audit_and_dry_run": "pass"
+  },
+  "hardware_update": {
+    "bootloader": "V1.1",
+    "flasher_exit_code": 0,
+    "whole_image_retry_count": 1,
+    "final_acceptance_and_reboot_logged": true,
+    "pc_asset_server": "stopped",
+    "doom_cdc_ports_after_update": 0,
+    "manual_standalone_gameplay": "user confirmed startup and physical controls",
+    "power_only_supply_test": "user confirmed operation from power alone",
+    "responsiveness": "user reported very smooth gameplay; FPS not instrumented"
+  },
+  "scope": "One-device power-only startup and physical gameplay confirmed, with offline engine/internal-reader checks and clean loader completion. FPS, long-duration stability and independent complete flash readback were not measured."
+}

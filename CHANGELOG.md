@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased — standalone mini arena
+
+- Add an original two-sector arena with two enemies, pistol/fist and small pickup/texture sets derived from Freedoom.
+- Store the complete 144,320-byte pack in 112,095 compressed internal-flash bytes, with an 8 KiB decoded cache and per-page CRC validation.
+- Start without USB initialization or a host handshake; retain physical controls and the original update-loader path.
+- Isolate mini generated tables, board checkout, engine libraries and update images under `artifacts/mini/`.
+- Verify real-engine gameplay and the exact internal-flash reader; power-only startup and physical controls confirmed on one unit. The user reported smooth gameplay; FPS was not measured.
+
 ## Unreleased — v5 enclosure preview and LCD rotation
 
 - Inset the actual live preview into the user-supplied KWS-X1 enclosure photograph without changing the photograph or stretching the game image.

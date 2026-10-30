@@ -8,11 +8,16 @@ import hashlib
 import argparse
 
 ROOT = Path(__file__).resolve().parents[1]
-CHECK = argparse.ArgumentParser(description=__doc__)
-CHECK.add_argument('--check',action='store_true',help='Verify staged files without writing or accessing USB')
-CHECK = CHECK.parse_args().check
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--check',action='store_true',help='Verify staged files without writing or accessing USB')
+parser.add_argument('--board',type=Path,help='Separate pinned board checkout for an alternate build')
+parser.add_argument('--mini',action='store_true',help='Stage standalone adapters and generated mini assets')
+args=parser.parse_args()
+CHECK=args.check
 OVERLAY = ROOT/'overlays/firmware'
-BOARD = ROOT / 'vendor/kws-x1-standalone-rs'
+BOARD = (args.board or ROOT / 'vendor/kws-x1-standalone-rs').resolve()
+if args.mini:
+    assert BOARD != (ROOT/'vendor/kws-x1-standalone-rs').resolve(), 'Mini builds require a separate --board checkout'
 REVISION = '517c5a9bf3fa9bda0be8f9ade435b108e588ad82'
 assert subprocess.check_output(['git', '-C', str(BOARD), 'rev-parse', 'HEAD'], text=True).strip() == REVISION
 lock=json.loads((ROOT/'SOURCE_LOCK.json').read_text())
@@ -20,7 +25,7 @@ if 'pinned_game_pages' in lock:
     blob=(OVERLAY/'game_pages.bin').read_bytes()
     assert len(blob)==lock['pinned_game_pages']['bytes']
     assert hashlib.sha256(blob).hexdigest()==lock['pinned_game_pages']['sha256'], 'Pinned game asset hash mismatch'
-STATE = ROOT / 'artifacts/staged-hashes.json'
+STATE = ROOT / ('artifacts/staged-mini-hashes.json' if args.mini else 'artifacts/staged-hashes.json')
 previous = json.loads(STATE.read_text()) if STATE.exists() else {}
 managed = set()
 def matches_previous(path):
@@ -40,7 +45,13 @@ def edited(path, source):
         target.write_text(source, encoding='utf-8', newline='\n')
     managed.add(path)
 
-for file in sorted([*OVERLAY.glob('*.rs'),*OVERLAY.glob('*.bin')]):
+files={p.name:p for p in [*OVERLAY.glob('*.rs'),*OVERLAY.glob('*.bin')]}
+if args.mini:
+    files.update({p.name:p for p in (ROOT/'standalone/firmware').glob('*.rs')})
+    for name in ('mini_assets.rs','mini-assets.bin'):files[name]=ROOT/'artifacts/mini'/name
+    mini_lock=json.loads((ROOT/'standalone/ASSET_LOCK.json').read_text())
+    assert hashlib.sha256(files['mini-assets.bin'].read_bytes()).hexdigest()==mini_lock['compressed_sha256']
+for file in sorted(files.values()):
     if file.name == 'main.rs':
         edited('firmware/src/main.rs', file.read_text())
     else:
@@ -82,8 +93,9 @@ edited('firmware/build.rs', build)
 memory = original('firmware/memory.x').replace('    __supper = .;', '    __supper = .;\n    *(.text.P_* .text.R_*);\n    *(.upper.assets);')
 edited('firmware/memory.x', memory)
 edited('firmware/src/panel.rs', original('firmware/src/panel.rs') + '\ninclude!("panel_extension.rs");\n')
-packer = original('firmware-pack/src/main.rs').replace('const CUSTOM_IRQS: [usize; 16] = [\n    1, 4, 13, 31, 38, 39, 40, 41, 86, 87, 88, 110, 111, 112, 113, 116,\n];',
-    'const CUSTOM_IRQS: [usize; 7] = [4, 31, 38, 39, 86, 87, 88];')
+custom_irqs = ('const CUSTOM_IRQS: [usize; 6] = [31, 38, 39, 86, 87, 88];' if args.mini
+    else 'const CUSTOM_IRQS: [usize; 7] = [4, 31, 38, 39, 86, 87, 88];')
+packer = original('firmware-pack/src/main.rs').replace('const CUSTOM_IRQS: [usize; 16] = [\n    1, 4, 13, 31, 38, 39, 40, 41, 86, 87, 88, 110, 111, 112, 113, 116,\n];',custom_irqs)
 assert packer != original('firmware-pack/src/main.rs')
 packer = packer.replace('    let record = Packed {', '''    // Place streams at the earliest sector boundary that never erases unread
     // compressed main bytes. The identical unpacker rehearsal remains mandatory.
@@ -101,7 +113,7 @@ packer = packer.replace('    let record = Packed {', '''    // Place streams at 
 packer = packer.replace('unpacker_bytes.next_multiple_of(size_of::<u32>())','data_offset')
 edited('firmware-pack/src/main.rs', packer)
 fixture = original('firmware-pack/tests/cli.rs').replace('const CUSTOM_IRQS: [usize; 16] = [\n    1, 4, 13, 31, 38, 39, 40, 41, 86, 87, 88, 110, 111, 112, 113, 116,\n];',
-    'const CUSTOM_IRQS: [usize; 7] = [4, 31, 38, 39, 86, 87, 88];')
+    custom_irqs)
 edited('firmware-pack/tests/cli.rs', fixture)
 if not CHECK:
     STATE.parent.mkdir(parents=True, exist_ok=True)

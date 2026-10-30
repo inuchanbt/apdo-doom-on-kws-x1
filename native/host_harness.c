@@ -55,6 +55,12 @@ __declspec(dllexport) int km_host_build_tics(uint32_t ms) {
 }
 __declspec(dllexport) int32_t km_host_player_x(void) { return players[consoleplayer].mo->x; }
 __declspec(dllexport) int32_t km_host_player_y(void) { return players[consoleplayer].mo->y; }
+__declspec(dllexport) uint32_t km_host_player_angle(void) { return players[consoleplayer].mo->angle; }
+__declspec(dllexport) int km_host_player_health(void) { return players[consoleplayer].health; }
+__declspec(dllexport) int km_host_player_ammo(void) { return players[consoleplayer].ammo[am_clip]; }
+__declspec(dllexport) int km_host_player_kills(void) { return players[consoleplayer].killcount; }
+int km_doom_menu(void);
+__declspec(dllexport) int km_host_menu(void) { return km_doom_menu(); }
 __declspec(dllexport) const char *km_host_error(void) { return error; }
 __declspec(dllexport) const uint16_t *km_host_screen(void) { return screen; }
 __declspec(dllexport) const uint32_t *km_host_trace(void) { return &trace[0][0]; }

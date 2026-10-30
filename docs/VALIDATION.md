@@ -94,6 +94,16 @@ The installed device subsequently booted v5, completed its versioned handshake, 
 
 Unlike the clean v3/v4 updates, this v5 flasher process ended with Windows access violation `0xC0000005` (signed exit `-1073741819`) during final completion. All 26 batch checksums were accepted, but the final acceptance/reboot log was not captured. The later v5 boot, image-matching upper-region startup check, gameplay, rotation, and user confirmation establish subsequent application operation; this is not recorded as a clean flasher exit or an independent flash readback. See [validation/pc-v5.json](validation/pc-v5.json).
 
+## Standalone mini arena
+
+The separate `codex/standalone-mini-doom` branch adds an original two-sector arena with two enemies, pistol/fist, ammo and a stimpack. Its complete converted pack is 144,320 bytes, stored internally as 112,095 compressed bytes in 141 independently decoded pages, with an 8 KiB decoded cache. No USB task or host handshake runs in the mini application.
+
+The real host engine ran 198 functional-test frames, killed both enemies, consumed ammo, moved/turned, opened/closed the menu and reproduced a complete HUD redraw. The actual Rust internal reader matched the entire pack plus 600 cross-page/eviction reads; all seven mini Rust tests passed. The existing PC variant's full regression suite also passed. The mini image passed exact decompression/vector/erase-layout audit and flasher dry-run.
+
+The v1r1 image SHA-256 is `f6a0ae64f398cb81f9dde2931c974fbe33d88fc2f85ee37ef50052cce57dc23b`. It installs 83,812 main-region bytes and 147,680 upper-region bytes within the existing protected bounds. The first update pass received verification code 4; one complete automatic retry ended with final loader acceptance, reboot logged, and flasher exit 0.
+
+The PC asset server was stopped before the update, and no DOOM CDC interface appeared afterward. The user then confirmed startup and physical controls from power alone, reporting very smooth gameplay. This is qualitative feedback, not a measured FPS result. Runtime stack margin, long-duration stability and independent complete flash readback remain unverified. See [standalone build and scope](../standalone/README.md) and [validation/mini-v1.json](validation/mini-v1.json).
+
 ## Limits
 
 - No independent complete application/upper-flash readback was performed.

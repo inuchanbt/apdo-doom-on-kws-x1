@@ -2,6 +2,8 @@
 
 [English](README.md) · [日本語](README.ja.md)
 
+**Standalone development branch:** this branch adds a tiny internal-flash arena in [standalone/](standalone/README.md), with power-only startup and physical controls confirmed on one unit. It has separate data/build outputs. The PC-linked v5 workflow below remains available; this branch has not been merged into `main`.
+
 **The KOWSI KWS-X1 USB-C power meter runs DOOM.** This port executes a low-memory DOOM engine and renders Freedoom's E1M1 on the meter's HC32F460. A USB-connected PC supplies game assets that do not fit on the device.
 
 The game runs on the meter. **A PC connection is required during play.** Browser keyboard/pointer controls and a switchable, low-rate preview of the actual device framebuffer are available. v5 adds an enclosure mockup and real LCD rotation through 180 degrees. Physical buttons remain available.
