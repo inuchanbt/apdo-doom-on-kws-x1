@@ -1,0 +1,14 @@
+{
+  "frames": 383,
+  "frame_range": [
+    6,
+    388
+  ],
+  "median_frame_ms": 180,
+  "fps_from_median": 5.555555555555555,
+  "median_usb_wait_ms": 4,
+  "minimum_untouched_stack_bytes": 15308,
+  "flash_exit_code": 0,
+  "bootloader_accepted": true,
+  "scene": "starting area"
+}

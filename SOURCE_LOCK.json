@@ -1,0 +1,31 @@
+{
+  "board": {
+    "url": "https://github.com/kralonur/kws-x1-standalone-rs",
+    "revision": "517c5a9bf3fa9bda0be8f9ade435b108e588ad82"
+  },
+  "engine": {
+    "url": "https://github.com/ArturBieniek4/DMC100-Doom",
+    "revision": "0cdc78eb66cdddacc43112d5f79c258c4a5440b7",
+    "patch": "patches/dmc100-doom.patch"
+  },
+  "doomgeneric": {
+    "url": "https://github.com/ozkl/doomgeneric",
+    "revision": "dcb7a8dbc7a16ce3dda29382ac9aae9d77d21284"
+  },
+  "embassy": {
+    "url": "https://github.com/embassy-rs/embassy",
+    "revision": "c2413d5994bbd8b7e6d5975fd49e6427cb903a02"
+  },
+  "game_data": {
+    "name": "Freedoom 0.13.0, converted E1M1",
+    "bytes": 2802000,
+    "sha256": "6b25a4f1adb6f1f1f5f42226c272b93ccff4f356ac8d7034cf83712b2da70c08"
+  },
+  "pinned_game_pages": {
+    "bytes": 122863,
+    "pages": 179,
+    "sha256": "86f186aa50633910c29b6601f000f1f7002e9e1e170f4a41f2beb0ccc898abdb",
+    "generator": "scripts/pin-assets.py",
+    "input_trace": "24 host-engine frames, 12 stationary then 12 turning"
+  }
+}
