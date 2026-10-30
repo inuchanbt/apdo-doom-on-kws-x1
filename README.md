@@ -4,9 +4,11 @@
 
 **Standalone development branch:** this branch adds a tiny internal-flash arena in [standalone/](standalone/README.md), with power-only startup and physical controls confirmed on one unit. It has separate data/build outputs. The PC-linked v5 workflow below remains available; this branch has not been merged into `main`.
 
-**The KOWSI KWS-X1 USB-C power meter runs DOOM.** This port executes a low-memory DOOM engine and renders Freedoom's E1M1 on the meter's HC32F460. A USB-connected PC supplies game assets that do not fit on the device.
+**The KOWSI KWS-X1 USB-C power meter runs DOOM.** The standalone mini arena runs on its HC32F460 using assets stored in internal flash. **During play it only needs power; no PC or asset server is required.** Power-only startup and physical controls have been confirmed on hardware.
 
-The game runs on the meter. **A PC connection is required during play.** Browser keyboard/pointer controls and a switchable, low-rate preview of the actual device framebuffer are available. v5 adds an enclosure mockup and real LCD rotation through 180 degrees. Physical buttons remain available.
+Build the standalone version with `./scripts/build-mini.ps1` after preparing the tools and sources; see the [standalone build and controls](standalone/README.md). It contains a small custom arena with two enemies. Sound, saves, map progression, Web controls and runtime LCD rotation are not included in this variant.
+
+The **PC-linked v5 variant**, also available in this branch, runs Freedoom E1M1 with assets streamed from a USB-connected PC. It requires that PC during play and offers browser controls, preview and LCD rotation. The following historical hardware measurements and PC setup instructions refer to that variant unless stated otherwise.
 
 ## Verified on hardware
 
@@ -26,9 +28,9 @@ The game runs on the meter. **A PC connection is required during play.** Browser
 
 The initial v2 sample measured 1,174 ms per frame and 669 ms of USB wait. v3 measured 180 ms per frame and 4 ms of USB wait: about **6.5× faster** in these starting-area samples. Scene changes and uncached assets affect the rate. See [validation and limits](docs/VALIDATION.md) for sample sizes and evidence.
 
-No sound, saves, persistent game settings, or supported map transition is included. Meter measurement, PD, and QC tasks do not run. Use the PC's data-capable USB connection and leave other equipment disconnected.
+No sound, saves, persistent game settings, or supported map transition is included. Meter measurement, PD, and QC tasks do not run. For the PC-linked variant, use the PC's data-capable USB connection and leave other equipment disconnected.
 
-A [standalone size study](docs/STANDALONE-FEASIBILITY.md) measures reduced E1M1 assets and the internal-flash budget. A small dedicated map is a possible follow-up; standalone gameplay has not been implemented.
+A [standalone size study](docs/STANDALONE-FEASIBILITY.md) records the earlier investigation that led to the mini arena.
 
 ## Controls
 
