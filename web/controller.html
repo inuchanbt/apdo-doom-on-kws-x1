@@ -1,0 +1,33 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: MIT -->
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>APDO · KWS-X1 Controller</title><link rel="stylesheet" href="/controller.css"><script src="/controller.js" defer></script></head>
+<body><main>
+  <header><div><p class="eyebrow">APDO / KWS-X1</p><h1>Small screen.<br>Full keyboard.</h1></div><p class="intro">DOOM runs on the meter.<br>Your PC supplies assets and controls.</p></header>
+  <section class="status" aria-live="polite"><span id="dot"></span><strong id="connection">Waiting for the meter…</strong><span id="performance">—</span></section>
+  <div class="workspace">
+    <section class="preview" aria-label="Live KWS-X1 screen">
+      <div class="section-heading"><h2>On the meter</h2><span class="badge">LIVE CAPTURE</span></div>
+      <div class="screen-area"><img id="screen" alt="Actual game image captured from KWS-X1" hidden><p id="screen-placeholder">Waiting for the first frame…</p></div>
+      <div class="preview-tools"><label><input id="preview-enabled" type="checkbox" checked> Live preview</label><a id="save-frame" href="/api/frame.bmp" download="kws-x1-frame.bmp" hidden>Save frame ↓</a></div>
+      <p id="screen-info" class="detail">120 × 90 · up to 1 preview per second</p><p class="hint">Pause preview to prioritize playing on the meter.</p>
+    </section>
+    <section class="controls" aria-label="Game controls">
+      <div class="section-heading"><h2>Take control</h2><span id="focus" class="detail">Keyboard off</span></div>
+      <div class="toolbar"><button id="enable" class="primary" disabled>Enable keyboard</button><button id="release">Release all</button></div>
+      <div class="layout">
+        <div class="movement">
+          <button data-mask="2" class="forward"><b>↑</b><small>W · Forward</small></button>
+          <button data-mask="4" class="left"><b>←</b><small>A · Turn left</small></button>
+          <button data-mask="128" class="back"><b>↓</b><small>S · Backward</small></button>
+          <button data-mask="8" class="right"><b>→</b><small>D · Turn right</small></button>
+        </div>
+        <div class="actions"><button data-mask="1" class="fire"><b>Fire</b><small>Space / Ctrl</small></button><button data-mask="16"><b>Use</b><small>E · Door / switch</small></button><button data-mask="32"><b>Menu</b><small>Esc</small></button><button data-mask="64"><b>Confirm</b><small>Enter</small></button></div>
+      </div>
+      <p class="hint">Arrow keys also work. In menus use ↑ / ↓ and Enter.<br>Switching tabs or windows releases PC keys.</p>
+      <p class="hint">You can also hold the buttons with a mouse or touch. The meter's physical buttons keep working.</p>
+    </section>
+  </div>
+  <p id="error" role="alert"></p>
+  <footer><p>Keep this server running while you play.<br>After USB loss, power-cycle the meter to resume.</p><button id="stop">Stop server</button></footer>
+</main></body></html>

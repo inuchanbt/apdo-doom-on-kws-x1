@@ -4,7 +4,7 @@
 
 **The KOWSI KWS-X1 USB-C power meter runs DOOM.** This port executes a low-memory DOOM engine and renders Freedoom's E1M1 on the meter's HC32F460. A USB-connected PC supplies game assets that do not fit on the device.
 
-The game runs on the meter. **A PC connection is required during play.** The current version uses the physical buttons; browser controls and a PC video preview have not been implemented.
+The game runs on the meter. **A PC connection is required during play.** v4 adds browser keyboard/pointer controls and a switchable, low-rate preview of the actual device framebuffer. Physical buttons remain available.
 
 ## Verified on hardware
 
@@ -17,12 +17,15 @@ The game runs on the meter. **A PC connection is required during play.** The cur
 | Controls | Movement, turning, firing, use, and menus confirmed |
 | v3 performance | Median 180 ms per frame, about **5.6 fps**, in the starting area |
 | USB | CDC asset streaming; length, sequence, address, and CRC32 validation |
-| Update | Bootloader acceptance and flasher exit code 0 confirmed for v2/v3 |
+| PC link (v4) | Remote input, short taps, timed release, preview pause/resume, and capture checked through the local API on hardware |
+| Update | Bootloader acceptance and flasher exit code 0 confirmed for v2/v3/v4 |
 | Stock restoration | Compatible stock-container structure checked; **restoration not tested** |
 
 The initial v2 sample measured 1,174 ms per frame and 669 ms of USB wait. v3 measured 180 ms per frame and 4 ms of USB wait: about **6.5× faster** in these starting-area samples. Scene changes and uncached assets affect the rate. See [validation and limits](docs/VALIDATION.md) for sample sizes and evidence.
 
 No sound, saves, persistent game settings, or supported map transition is included. Meter measurement, PD, and QC tasks do not run. Use the PC's data-capable USB connection and leave other equipment disconnected.
+
+A [standalone size study](docs/STANDALONE-FEASIBILITY.md) measures reduced E1M1 assets and the internal-flash budget. A small dedicated map is a possible follow-up; standalone gameplay has not been implemented.
 
 ## Controls
 
@@ -38,6 +41,30 @@ No sound, saves, persistent game settings, or supported map transition is includ
 | Enter the original update loader | Hold Back + OK while connecting USB |
 
 Buttons are sampled every 5 ms, with debouncing and a bounded edge queue so short presses survive slow rendered frames.
+
+## Play from the PC (v4)
+
+After building and installing v4, start the controller:
+
+```powershell
+.\scripts\play.ps1
+```
+
+Keep the server running and open its printed local URL. Click **Enable keyboard**, then use:
+
+| Action | PC input |
+| --- | --- |
+| Move forward / backward | W / S or Up / Down |
+| Turn left / right | A / D or Left / Right |
+| Fire | Space or Ctrl |
+| Use | E |
+| Menu / confirm | Esc / Enter |
+
+The page also has holdable pointer/touch buttons. **Release all** clears PC input while continuing asset delivery. Switching away from the page releases the keys and disables keyboard capture. Press **Enable keyboard** again when returning.
+
+The preview is **120×90, at most one capture per second**; the meter still renders at its own rate. Disable **Live preview** to prioritize gameplay speed, or use **Save frame** to download the latest BMP. The meter FPS shown on the page includes preview transfer pauses. The v3 benchmark above remains a separate historical measurement.
+
+The controller supplies assets and owns the USB port: stop any other asset server first. It recognizes v4's serial string `KWSX1DOOM04`; older firmware needs an update. `-NoBrowser`, `-Port 8080`, and `-UsbPort COM6` are optional launcher arguments. **Stop server** also ends asset delivery; restart the server and power-cycle the meter to play again. See [PC controls and protocol](docs/PC-CONTROLS.md) for details and verification limits.
 
 ## Source and build
 
@@ -57,28 +84,29 @@ The source revisions and asset hashes are fixed in [SOURCE_LOCK.json](SOURCE_LOC
 
 **These commands do not open USB or flash a device.** The build creates an X1C, audits its decompressed contents and erase layout, and runs the flasher's offline validation. Read [updating and recovery](docs/RECOVERY.md) before a hardware update. This repository publishes source, not a universal firmware installer.
 
-## Supply assets from the PC
+## Headless asset server / older firmware
 
-With v3 installed, start the server before or after connecting the meter:
+For v4 without browser controls or preview, run the headless server instead:
 
 ```powershell
 . .\scripts\env.ps1
-& $env:KWS_PYTHON scripts\serve-game.py --auto --version 3
+& $env:KWS_PYTHON scripts\serve-game.py --auto --version 4
 ```
 
 Automatic discovery selects only this port's development USB identity and serial string. With multiple meters, use `--port COM5` with the correct port instead. Keep one asset server running while playing; it owns the USB connection. It has no flashing commands.
 
-The server logs frame time, asset requests, USB wait, inputs, decoded-page count, and untouched stack space to `artifacts/runtime.jsonl`. Choose a separate file with `--stats artifacts/run.jsonl`. v1/v2 can use the corresponding `--version` value.
+The headless server logs frame time, asset requests, USB wait, inputs, decoded-page count, and untouched stack space to `artifacts/runtime.jsonl`. The browser controller defaults to `artifacts/runtime-v4.jsonl`. Choose a separate file with `--stats artifacts/run.jsonl` when invoking either Python entry point. v1/v2/v3 can use the corresponding `--version` value in the headless server.
 
 A disconnect, bad response, or asset-read timeout stops this experimental firmware. To resume, restart the server and power-cycle the meter. Automatic gameplay reconnection is not implemented.
 
-## How v3 fits
+## How it fits
 
 - The same low-memory engine integration used in [DOOM on KM003C](https://github.com/inuchanbt/apdo-doom-on-km003c) runs on the KWS-X1.
 - Board startup, LCD/DMA transport, the original-loader update format, and the unpacker come from [kralonur/kws-x1-standalone-rs](https://github.com/kralonur/kws-x1-standalone-rs).
 - 179 frequently read Freedoom pages occupy 122,863 compressed bytes in the existing upper application region. Remaining assets stream over USB as bounded LZ4 blocks.
 - An 8 KiB decoded-page cache and a 32 KiB compressed LRU cache reduce repeat transfers. The framebuffer stores the 180×135 game rectangle; the LCD's black sidebars consume no framebuffer memory.
 - Packaging computes a stream placement that protects unread compressed bytes during first-boot unpacking, then rehearses the exact decoder and checks every output byte.
+- v4 multiplexes assets, leased controls, telemetry, and optional previews over the same CDC connection. It samples the completed framebuffer in bounded chunks without allocating another framebuffer.
 
 ## Repository layout
 
@@ -88,7 +116,8 @@ A disconnect, bad response, or asset-read timeout stops this experimental firmwa
 | `overlays/firmware/` | KWS-X1 adapters and the licensed pinned Freedoom subset |
 | `patches/` | Changes applied to fixed upstream sources |
 | `locks/` | Pinned Rust dependency resolution |
-| `scripts/` | Source/data preparation, build, tests, profiling, and asset server |
+| `scripts/` | Source/data preparation, build, tests, profiling, and PC/asset servers |
+| `web/` | Local browser controller and real-device preview |
 | `tests/` | Engine, protocol, decoder, and cache checks |
 | `docs/` | Build, recovery, and validation details |
 | `notices/` | Third-party license copies and Freedoom credits |

@@ -10,7 +10,7 @@ pub async fn task() {
     let mut config = embassy_usb::Config::new(0xc0de, 0xd00d);
     config.manufacturer = Some("APDO experiment");
     config.product = Some("KWS-X1 native DOOM data link");
-    config.serial_number = Some("KWSX1DOOM01");
+    config.serial_number = Some("KWSX1DOOM04");
     let mut cfg = [0; 256];
     let mut bos = [0; 256];
     let mut control = [0; 64];
@@ -22,7 +22,7 @@ pub async fn task() {
         class.wait_connection().await;
         // Hello must echo format, image size and CRC before native startup.
         let mut hello = [0u8; 16];
-        hello[..8].copy_from_slice(b"X1DOOM03");
+        hello[..8].copy_from_slice(b"X1DOOM04");
         hello[8..12].copy_from_slice(&stream::IMAGE_BYTES.to_le_bytes());
         let hello_crc = stream::crc32(&hello[..12]);
         hello[12..].copy_from_slice(&hello_crc.to_le_bytes());
@@ -37,12 +37,44 @@ pub async fn task() {
             let address = match request {
                 stream::Request::Read(address) => address,
                 stream::Request::Frame {number,ms,keys,misses,wait_ms,stack_free,decodes} => {
-                    let mut stats = [0u8;32];
-                    stats[..4].copy_from_slice(b"STA3");
-                    for (out,value) in stats[4..].chunks_exact_mut(4).zip([number,ms,keys,misses,wait_ms,stack_free,decodes]) {
+                    use core::sync::atomic::Ordering;
+                    let mut stats = [0u8;48];
+                    stats[..4].copy_from_slice(b"FRM4");
+                    for (out,value) in stats[4..].chunks_exact_mut(4).zip([number,ms,keys,misses,wait_ms,stack_free,decodes,
+                        u32::from(crate::remote::APPLIED.load(Ordering::Relaxed)),
+                        u32::from(crate::game::APPLIED.load(Ordering::Relaxed)),
+                        u32::from(crate::game::MENU.load(Ordering::Relaxed)),crate::preview::BYTES as u32]) {
                         out.copy_from_slice(&value.to_le_bytes());
                     }
                     assert!(class.write_packet(&stats).await.is_ok());
+                    let mut bytes=[0u8;crate::control::CONTROL_BYTES];
+                    let mut received=0;
+                    while received<bytes.len() {
+                        let n=class.read_packet(&mut packet).await.expect("PC control disconnected");
+                        assert!(n<=bytes.len()-received);
+                        bytes[received..received+n].copy_from_slice(&packet[..n]);received+=n;
+                    }
+                    let control=crate::control::parse(&bytes,number).unwrap_or_else(|_|{crate::remote::clear();panic!("bad PC control frame")});
+                    crate::remote::update(control);
+                    if control.flags&crate::control::PREVIEW!=0 {
+                        // FRAME stays immutable until READY. Two bounded passes
+                        // compute CRC then send pixels without another framebuffer.
+                        let mut pixels=[0u8;64];
+                        let mut crc=!0u32;
+                        for offset in (0..crate::preview::BYTES).step_by(64) {
+                            let n=(crate::preview::BYTES-offset).min(64);
+                            unsafe {crate::game::preview_chunk(offset,&mut pixels[..n]);}
+                            crc=crate::control::crc_update(crc,&pixels[..n]);
+                        }
+                        let mut header=[0u8;24];header[..4].copy_from_slice(b"IMG4");
+                        for (out,value) in header[4..].chunks_exact_mut(4).zip([number,120,90,crate::preview::BYTES as u32,!crc]) {out.copy_from_slice(&value.to_le_bytes());}
+                        assert!(class.write_packet(&header).await.is_ok());
+                        for offset in (0..crate::preview::BYTES).step_by(64) {
+                            let n=(crate::preview::BYTES-offset).min(64);
+                            unsafe {crate::game::preview_chunk(offset,&mut pixels[..n]);}
+                            assert!(class.write_packet(&pixels[..n]).await.is_ok());
+                        }
+                    }
                     stream::READY.store(true,core::sync::atomic::Ordering::Release);
                     continue;
                 }

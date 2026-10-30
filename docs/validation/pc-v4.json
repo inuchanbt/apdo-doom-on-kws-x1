@@ -1,0 +1,27 @@
+{
+  "recorded_date": "2026-10-30",
+  "device_count": 1,
+  "bootloader": "V1.1",
+  "firmware_image_sha256": "3383cdc89ecc4aff96f3b579883d49d477f49fcc63ea88491ad8f3143e1deb5e",
+  "flasher_exit_code": 0,
+  "checks": {
+    "short_tap_menu_open_close": "pass",
+    "forward_backward_right_fire_applied_and_released": "pass",
+    "heartbeat_silence_releases_input": "pass",
+    "preview_pause_and_resume": "pass",
+    "crc_validated_capture": "pass",
+    "capture_scene_and_hud_inspection": "pass",
+    "manual_browser_interaction": "basic preview and keyboard confirmed; intermittent lost short presses reported",
+    "full_tic_buffer_short_press_regression": "failed before fix; passes with D_WillBuildTic guard and verifies real player movement",
+    "short_press_fix_hardware": "see pc-v4r1.json for the installed follow-up image and real-device tap results",
+    "automatic_browser_interaction": "unavailable: computer-use could not determine the browser URL"
+  },
+  "capture": {
+    "width": 120,
+    "height": 90,
+    "bmp_sha256": "8e098e7f1ded6d8bc0934a324572ea07e48b60c358cdf881eb485b3579619c27"
+  },
+  "minimum_untouched_stack_bytes_in_functional_test": 15004,
+  "offline_tests": {"python_pc_controller": 10, "rust_optimizations": 11},
+  "scope": "Functional API/USB checks on one device, not a performance benchmark or long-duration qualification"
+}

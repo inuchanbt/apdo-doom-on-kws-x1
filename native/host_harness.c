@@ -3,8 +3,11 @@
 #include <stdint.h>
 #include <string.h>
 #include <setjmp.h>
+#include "doomstat.h"
 static const uint8_t *image;
 static uint32_t image_size,clock_ms,buttons;
+static uint8_t input_script[32];
+static unsigned input_count,input_index;
 static uint16_t screen[320*240];
 static char error[192];
 static jmp_buf bail_out;
@@ -14,9 +17,10 @@ void km_doom_init(void);
 void km_doom_step(void);
 void km_doom_redraw(void);
 void D_Display(void);
+void NetUpdate(void);
 uint32_t km_millis(void) { return clock_ms; }
 void km_sleep(uint32_t ms) { clock_ms+=ms; }
-uint32_t km_keys(void) { return buttons; }
+uint32_t km_keys(void) { return input_index<input_count ? input_script[input_index++] : buttons; }
 __attribute__((noreturn)) void km_fail(const char *message) {
     size_t n=strlen(message);if(n>=sizeof(error))n=sizeof(error)-1;
     memcpy(error,message,n);error[n]=0;longjmp(bail_out,1);
@@ -39,6 +43,18 @@ __declspec(dllexport) int km_host_step(uint32_t keys) {
     clock_ms+=29;buttons=keys;
     if(setjmp(bail_out))return -1;km_doom_step();return 0;
 }
+// Exercise queued edges at the real engine's full tic-command buffer boundary.
+__declspec(dllexport) int km_host_input_script(const uint8_t *states,uint32_t n) {
+    if(n>sizeof(input_script))return -1;
+    memcpy(input_script,states,n);input_count=n;input_index=0;return 0;
+}
+__declspec(dllexport) uint32_t km_host_input_pending(void) { return input_count-input_index; }
+__declspec(dllexport) int km_host_build_tics(uint32_t ms) {
+    clock_ms+=ms;
+    if(setjmp(bail_out))return -1;NetUpdate();return 0;
+}
+__declspec(dllexport) int32_t km_host_player_x(void) { return players[consoleplayer].mo->x; }
+__declspec(dllexport) int32_t km_host_player_y(void) { return players[consoleplayer].mo->y; }
 __declspec(dllexport) const char *km_host_error(void) { return error; }
 __declspec(dllexport) const uint16_t *km_host_screen(void) { return screen; }
 __declspec(dllexport) const uint32_t *km_host_trace(void) { return &trace[0][0]; }

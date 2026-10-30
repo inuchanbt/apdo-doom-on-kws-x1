@@ -1,0 +1,21 @@
+{
+  "recorded_date": "2026-10-30",
+  "device_count": 1,
+  "bootloader": "V1.1",
+  "firmware_image_sha256": "59380db785fe136916211e6561243db434763eaf01fa21115d634af7cfe874a7",
+  "flasher_exit_code": 0,
+  "change": "Preserve queued input while the real engine's tic-command buffer is full using D_WillBuildTic",
+  "offline_regression": "Fails before the fix; passes afterward and verifies real player movement",
+  "real_device_local_api": {
+    "press_duration_ms": 10,
+    "menu_taps_sent": 20,
+    "menu_toggles_observed": 20,
+    "response_ms": [328, 250, 360, 234, 359, 281, 250, 250, 297, 234, 250, 250, 359, 250, 375, 266, 343, 265, 406, 250],
+    "final_menu_active": false,
+    "final_remote_buttons": 0,
+    "final_applied_buttons": 0,
+    "preview_capture": "pass"
+  },
+  "manual_browser_short_press_confirmation": "user confirmed short presses were stable after installing v4r1",
+  "scope": "API-to-device functional input test on one unit; not a browser timing or performance benchmark"
+}

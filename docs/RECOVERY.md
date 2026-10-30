@@ -31,7 +31,7 @@ $flasher = '.\vendor\kws-x1-standalone-rs\target\x86_64-pc-windows-gnu\release\f
 
 ## Update the meter
 
-Stop its asset server, unplug the meter, then **hold Back + OK while connecting a data-capable USB cable**. Confirm the bootloader screen. An optional `--info` query opens USB and should report mode `0`.
+Stop its PC controller or asset server, unplug the meter, then **hold Back + OK while connecting a data-capable USB cable**. Confirm the bootloader screen. An optional `--info` query opens USB and should report mode `0`.
 
 To write the reviewed image and its exact hash:
 
@@ -42,13 +42,13 @@ To write the reviewed image and its exact hash:
 
 The flasher checks the supported HID identity and refuses ambiguous device selection. It writes checked batches, waits for final acceptance, and sends reboot only after acceptance. The upstream tool can retry a complete application pass after verification code 4. Do not disconnect during writing or first-boot unpacking.
 
-Then run the v3 asset server:
+Then start the v4 PC controller (it also supplies assets):
 
 ```powershell
-& $env:KWS_PYTHON scripts\serve-game.py --auto --version 3
+.\scripts\play.ps1
 ```
 
-Gameplay always requires the asset server. If gameplay stops after a USB loss, restart the server and power-cycle the meter. If the application does not start, re-enter the original loader with Back + OK rather than relying on the application USB interface.
+For headless v4 play use `scripts/serve-game.py --auto --version 4`; older images need their corresponding version. Gameplay always requires asset delivery from one server. If gameplay stops after a USB loss, restart the server and power-cycle the meter. If the application does not start, re-enter the original loader with Back + OK rather than relying on the application USB interface. See [PC-CONTROLS.md](PC-CONTROLS.md) for controller setup.
 
 ## Going back to stock
 

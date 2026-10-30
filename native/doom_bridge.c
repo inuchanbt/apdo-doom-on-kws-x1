@@ -157,8 +157,13 @@ void I_StartFrame(void) {}
 void I_UpdateNoBlit(void) {}
 void I_FinishUpdate(void) {}
 void I_SetPalette(int p) { R_PaletteChanged();pal_read(p,pump_lut); }
+boolean D_WillBuildTic(void);
 void I_StartTic(void) {
     static uint32_t previous;
+    // BuildNewTic polls once even when its command buffer is full. Preserve
+    // queued press/release edges until this poll will build a real game tic,
+    // as the upstream I_InputTic adapter does.
+    if (!D_WillBuildTic()) return;
     uint32_t next=km_keys();
     const int keys[]={KEY_FIRE,KEY_UPARROW,KEY_LEFTARROW,KEY_RIGHTARROW,KEY_USE,KEY_ESCAPE,KEY_ENTER,KEY_DOWNARROW};
     for(unsigned i=0;i<sizeof(keys)/sizeof(*keys);i++) if((next^previous)&(1u<<i)) {

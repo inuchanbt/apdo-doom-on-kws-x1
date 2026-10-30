@@ -7,10 +7,12 @@ try {
     if ($LASTEXITCODE) { throw 'Source verification failed' }
     & $env:KWS_PYTHON scripts\build-engine.py --host-test
     if ($LASTEXITCODE) { throw 'Host engine build failed' }
-    foreach ($taskTest in @('tests/test-engine.py','tests/test-stream.py','scripts/make-codec-vectors.py')) {
+    foreach ($taskTest in @('tests/test-engine.py','tests/test-short-input.py','tests/test-stream.py','scripts/make-codec-vectors.py')) {
         & $env:KWS_PYTHON $taskTest
         if ($LASTEXITCODE) { throw "Failed: $taskTest" }
     }
+    & $env:KWS_PYTHON -m unittest discover -s tests -p test_pc_controller.py -v
+    if ($LASTEXITCODE) { throw 'PC controller tests failed' }
     & $env:KWS_PYTHON scripts\profile-cache.py | Set-Content artifacts\cache-comparison.log -Encoding utf8
     if ($LASTEXITCODE) { throw 'Engine access trace failed' }
     $taskRustArgs = @('--edition=2024', '--test', 'tests/optimizations.rs', '-o', 'artifacts/optimizations-test.exe')

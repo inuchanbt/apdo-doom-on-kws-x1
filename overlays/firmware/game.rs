@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 //! KWS-X1 display and button adapter. C keeps its original km_* ABI.
 use firmware_core::buttons;
+use core::sync::atomic::{AtomicU8,Ordering};
+pub static APPLIED:AtomicU8=AtomicU8::new(0);
+pub static MENU:core::sync::atomic::AtomicBool=core::sync::atomic::AtomicBool::new(false);
 #[unsafe(link_section = ".sram2.framebuffer")]
 static mut FRAME: [u16; 180 * 135] = [0; 180 * 135];
 unsafe extern "C" {
@@ -19,7 +22,8 @@ extern "C" fn km_sleep(ms: u32) {
 extern "C" fn km_keys() -> u32 {
     let raw = crate::input::next();
     let menu = unsafe { km_doom_menu() } != 0;
-    if menu {
+    MENU.store(menu,Ordering::Relaxed);
+    let local=if menu {
         u32::from(raw & buttons::LEFT != 0) << 1 |
         u32::from(raw & buttons::RIGHT != 0) << 7 |
         u32::from(raw & buttons::OK != 0) << 6 |
@@ -31,7 +35,14 @@ extern "C" fn km_keys() -> u32 {
         u32::from(raw & buttons::OK != 0) << 1 |
         u32::from(raw & buttons::LEFT != 0) << 2 |
         u32::from(raw & buttons::RIGHT != 0) << 3
-    }
+    };
+    let keys=local|u32::from(crate::remote::next());
+    APPLIED.store(keys as u8,Ordering::Relaxed);
+    keys
+}
+/// The engine must remain blocked in its frame handoff until all reads finish.
+pub unsafe fn preview_chunk(offset:usize,out:&mut [u8]) {
+    unsafe {crate::preview::chunk(&*(&raw const FRAME),offset,out);}
 }
 #[unsafe(no_mangle)]
 extern "C" fn km_exit() -> ! { cortex_m::peripheral::SCB::sys_reset() }

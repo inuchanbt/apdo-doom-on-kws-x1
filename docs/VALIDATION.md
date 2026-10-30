@@ -9,6 +9,7 @@ Recorded on **2026-10-30 (Asia/Tokyo)**. One KOWSI KWS-X1 was used, showing Boot
 - v2 installed, ran, and improved responsiveness; the user still observed substantial input-to-picture delay.
 - v3r1 installed with final bootloader acceptance and flasher exit code **0**. The device enumerated its development CDC interface, completed the v3 handshake, and continued native game rendering and asset requests.
 - The user confirmed a substantial further improvement with v3. This is qualitative feedback, not a measured performance comparison against the KM003C.
+- v4 installed with final bootloader acceptance and flasher exit code **0**, enumerated as `KWSX1DOOM04`, and ran the asset/control/preview exchange on the real meter. See the v4 record below.
 
 v1's flashing process reported code 4 and retried; its final completion log was not captured and the command exited 1. Its subsequent display/controls were confirmed. v2 and v3 have separate recorded clean update completions.
 
@@ -36,7 +37,7 @@ Curated, non-identifying summaries are included in [validation/v2-starting-area.
 - Image packaging: nine container/packer regressions, plus full decompression audit and flasher dry-run for the actual update image.
 - The published build workflow is also checked from a separately reconstructed source tree; the current running meter is not reflashed for publication checks.
 
-The clean reconstruction regenerated the exact E1M1 data and produced an X1C
+The clean reconstruction of the published v3r1 baseline (commit `747899b96839c72242649d99fbf673d107801dbe`) regenerated the exact E1M1 data and produced an X1C
 byte-for-byte identical to the hardware-tested v3r1 image (210,498 bytes):
 
 ```text
@@ -47,10 +48,42 @@ This equality was observed with the recorded Windows toolchain. It is not a
 promise of identical output from arbitrary compiler versions. The image itself
 remains a local generated artifact rather than a committed firmware binary.
 
+## v4 PC controls and preview
+
+The hardware-installed v4 image passed a full decompression/erase-layout audit and flasher dry-run before installation. Its SHA-256 is:
+
+```text
+3383cdc89ecc4aff96f3b579883d49d477f49fcc63ea88491ad8f3143e1deb5e
+```
+
+On real hardware, local HTTP requests were traced to native input/menu telemetry:
+
+- A short Esc press/release opened and closed the menu.
+- Forward, backward, right turn, and fire reached the combined engine input; explicit release returned it to zero.
+- A held left turn released after browser-heartbeat silence.
+- Preview OFF stopped new captures while native frames continued; ON resumed captures. A 120×90 BMP was retrieved and its scene/HUD visually inspected.
+- Untouched stack space remained at least 15,004 bytes in this functional test. This is a short test, not a worst-case stack bound.
+
+The browser controller reported about 5.2 native fps and 0.9 preview fps in an initial stationary observation. Later movement changed the scene and rate. These are functional observations, not a matched v3/v4 benchmark. The controller's Meter FPS includes preview/control transfer pauses; the per-frame engine time does not.
+
+All 10 Python PC-controller tests and 11 Rust optimization tests (including four new control/preview tests) passed. The controller tests use fake USB and local HTTP; actual USB behavior was separately checked as above. Curated evidence is in [validation/pc-v4.json](validation/pc-v4.json), with raw logs and BMPs retained in ignored `artifacts/`.
+
+The user confirmed basic browser preview/keyboard operation, while reporting intermittent lost short presses. A real-engine regression reproduced a queued press being consumed by an input poll with a full five-command tic buffer. The adapter now uses upstream's `D_WillBuildTic` check to preserve queued edges until a command can be built; the regression passes and verifies real player movement.
+
+The v4r1 follow-up image passed full decompression/erase-layout audit and flasher dry-run. SHA-256:
+
+```text
+59380db785fe136916211e6561243db434763eaf01fa21115d634af7cfe874a7
+```
+
+v4r1 installed with final bootloader acceptance and flasher exit **0**, and reconnected to the existing controller. All **20/20** 10 ms Esc taps sent through local HTTP toggled the native menu; the observed command-to-menu-telemetry delays were 234–406 ms. The test ended with menu closed and remote/applied masks zero. Preview capture also succeeded. This checks API-to-device delivery, not browser event timing, and is not a performance benchmark. The user then manually confirmed that browser short presses were stable. See [validation/pc-v4r1.json](validation/pc-v4r1.json).
+
+Automatic browser visual/input checking stopped because the Windows computer-use tool could not determine the active browser URL with sufficient confidence. Browser focus-loss behavior remains unconfirmed. See [PC-CONTROLS.md](PC-CONTROLS.md).
+
 ## Limits
 
 - No independent complete application/upper-flash readback was performed.
 - Stock V1.0.5V passed container validation; stock restoration and a complete flash recovery were not tested here.
 - Clock frequencies are configured nominal values; oscillator accuracy was not measured.
-- Sound, saves, map transitions, browser controls, PC preview, automatic gameplay reconnect, and long-duration stability are outside this baseline.
+- Sound, saves, map transitions, automatic gameplay reconnect, and long-duration stability remain outside the verified scope.
 - The code preserves the defined flash bounds; that does not qualify electrical safety, USB compliance, or compatibility with other units.

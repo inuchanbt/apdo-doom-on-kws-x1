@@ -12,6 +12,7 @@ pub async fn task(inputs: [InputPin;4]) {
     let mut debounce = Debounced::default();
     let mut previous = 0;
     loop {
+        crate::remote::expire();
         let mut raw = 0;
         for (i,pin) in inputs.iter().enumerate() { if pin.is_low() { raw |= 1 << i; } }
         let stable = debounce.update(raw,3);

@@ -88,6 +88,8 @@ See [RECOVERY.md](RECOVERY.md) for the separate device-update procedure.
 .\scripts\test.ps1
 ```
 
-This runs the real host engine for 140 frames, verifies asset protocol framing and failure handling, round-trips every Freedoom page through the Python encoder and Rust decoder, checks cache allocation/eviction, replays engine reads, and runs the board packer's/container tests. It does not contact USB. Cargo may download locked dependencies on the first run; after fetching them, `CARGO_NET_OFFLINE=true` can enforce offline dependency use.
+This runs the real host engine for 140 frames, verifies asset protocol framing and failure handling, round-trips every Freedoom page through the Python encoder and Rust decoder, checks cache allocation/eviction, replays engine reads, and runs the board packer's/container tests. v4 also checks local HTTP input/session boundaries, queued/expired controls, BMP output, fragmented asset/control/preview traffic, and firmware preview sampling. The HTTP tests briefly listen and connect on loopback; USB is never opened. Cargo may download locked dependencies on the first run; after fetching them, `CARGO_NET_OFFLINE=true` can enforce offline dependency use.
+
+A separate real-engine regression fills the tic-command buffer, queues a short forward press/release at the rejected-poll boundary, and verifies that the input survives and moves the player.
 
 These checks do not emulate the MCU, panel, USB controller, or bootloader. See [VALIDATION.md](VALIDATION.md) for the actual hardware evidence and its limits.

@@ -5,7 +5,7 @@ The existing root [LICENSE](LICENSE) is MIT. It applies to documentation, projec
 | Material | Source / scope | Terms |
 | --- | --- | --- |
 | KWS-X1 board implementation | [kralonur/kws-x1-standalone-rs](https://github.com/kralonur/kws-x1-standalone-rs): panel, DMA, startup reference, container, unpacker, flasher | MIT OR Apache-2.0; copies in `notices/kws-x1-*` |
-| KM003C integration | [inuchanbt/apdo-doom-on-km003c](https://github.com/inuchanbt/apdo-doom-on-km003c): C engine bridge, harness, converter patch and USB bring-up adaptation | C integration is GPL-2.0-or-later; original project MIT notice retained in `notices/km003c-project-MIT.txt` |
+| KM003C integration | [inuchanbt/apdo-doom-on-km003c](https://github.com/inuchanbt/apdo-doom-on-km003c): C engine bridge, harness, converter patch, USB bring-up adaptation, and browser keyboard/pointer flow | C integration is GPL-2.0-or-later; `web/` is marked MIT; original project MIT notice retained in `notices/km003c-project-MIT.txt` |
 | USB bring-up lineage | [okhsunrog/km003c-firmware](https://github.com/okhsunrog/km003c-firmware), through the APDO integration | Upstream MIT terms continue to apply; `overlays/firmware/usb.rs` is marked MIT |
 | Low-memory engine/converter | [ArturBieniek4/DMC100-Doom](https://github.com/ArturBieniek4/DMC100-Doom) | GPL-2.0-or-later; retain upstream per-file notices and licenses in reconstructed source |
 | Engine lineage | [ozkl/doomgeneric](https://github.com/ozkl/doomgeneric), id Software | GPL-2.0; retain upstream notices |

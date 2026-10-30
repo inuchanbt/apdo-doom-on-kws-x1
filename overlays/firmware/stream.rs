@@ -30,22 +30,8 @@ static mut HOT_CLOCK: u32 = 0;
 static mut MISSES: u32 = 0;
 static mut WAIT_US: u64 = 0;
 static mut DECODES: u32 = 0;
-const CRC_TABLE: [u32;256] = {
-    let mut table=[0u32;256];
-    let mut i=0;
-    while i<256 {
-        let mut v=i as u32; let mut j=0;
-        while j<8 { v=(v>>1)^(0xedb88320 & 0u32.wrapping_sub(v&1));j+=1; }
-        table[i]=v;i+=1;
-    }
-    table
-};
 pub fn crc32(bytes: &[u8]) -> u32 {
-    let mut crc = !0u32;
-    for &byte in bytes {
-        crc=(crc>>8)^CRC_TABLE[((crc as u8)^byte) as usize];
-    }
-    !crc
+    !crate::control::crc_update(!0,bytes)
 }
 /// Initialize NOLOAD SRAM2 parity before copying arbitrary-length blocks into it.
 pub unsafe fn init() {
