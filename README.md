@@ -2,6 +2,8 @@
 
 [English](README.md) · [日本語](README.ja.md)
 
+**Widescreen development branch:** v7r1 uses the 240×135 LCD, keeps natural proportions, widens horizontal FOV to about 106°, and redistributes the HUD. Native/API checks pass, and the user confirmed complete display/HUD, normal operation and responsive gameplay. A 180-frame starting-area sample measured **158 ms (6.3 fps)** with preview disabled. See [WIDESCREEN.md](docs/WIDESCREEN.md). Historical 4:3 results are identified by their earlier version numbers below.
+
 **The KOWSI KWS-X1 USB-C power meter runs DOOM.** This port executes a low-memory DOOM engine and renders Freedoom's E1M1 on the meter's HC32F460. A USB-connected PC supplies game assets that do not fit on the device.
 
 The game runs on the meter. **A PC connection is required during play.** Browser keyboard/pointer controls and a switchable, low-rate preview of the actual device framebuffer are available. v5 adds an enclosure mockup and real LCD rotation through 180 degrees. Physical buttons remain available.
@@ -17,7 +19,7 @@ The user confirmed normal on-device display and PC controls, and smoother gamepl
 | Device | One KOWSI KWS-X1; Bootloader V1.1 |
 | Execution | Native Cortex-M4 / HC32F460; nominal 192 MHz profile |
 | Game | Freedoom 0.13.0, E1M1 |
-| Display | 180×135, centered on the 240×135 LCD; full 4:3 game view |
+| Display (v7r1) | Full 240×135 LCD, about 106° horizontal FOV, natural proportions and complete HUD confirmed by the user |
 | Controls | Movement, turning, firing, use, and menus confirmed |
 | v3 performance | Median 180 ms per frame, about **5.6 fps**, in the starting area |
 | USB | CDC asset streaming; length, sequence, address, and CRC32 validation |
@@ -67,7 +69,7 @@ Keep the server running and open its printed local URL. Click **Enable keyboard*
 
 The page also has holdable pointer/touch buttons. **Release all** clears PC input while continuing asset delivery. Switching away from the page releases the keys and disables keyboard capture. Press **Enable keyboard** again when returning.
 
-The preview is **120×90, at most one capture per second**; the meter still renders at its own rate. Disable **Live preview** to prioritize gameplay speed, or use **Save frame** to download the latest BMP. The meter FPS shown on the page includes preview transfer pauses. The v3 benchmark above remains a separate historical measurement.
+The wide preview is **160×90, at most one capture per second** (120×90 for earlier 4:3 firmware); the meter still renders at its own rate. Disable **Live preview** to prioritize gameplay speed, or use **Save frame** to download the latest BMP. The meter FPS shown on the page includes preview transfer pauses. The v3 benchmark above remains a separate historical measurement.
 
 The preview is inset into the supplied KWS-X1 enclosure photograph. On v5, **Rotate LCD 180°** rotates the real meter display at a frame boundary and waits for device confirmation. Choose **Follow LCD · upright game** to turn the enclosure around the upright preview, or **Fixed enclosure · LCD view** to show how the LCD looks in the stationary enclosure. Rotation keeps input mappings unchanged and resets on power-up. Saved BMPs retain the upright logical frame.
 

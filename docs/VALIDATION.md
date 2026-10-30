@@ -102,6 +102,10 @@ v6r1 also passed 20/20 10 ms Esc taps through local HTTP with native menu acknow
 
 The engine/cache/cadence regression suite passed, with frame hashes matching the uncached build. The updated decoder passed all 2,737 real pack pages and periodic overlap/truncation cases; all 13 Rust optimization tests passed at speed optimization level 2. Both images passed the full decompression/layout audit and flasher dry-run. See [implementation and image hashes](PC-PERFORMANCE.md), [v6 evidence](validation/pc-v6.json), and [v6r1 evidence](validation/pc-v6r1.json).
 
+## Wide LCD (2026-10-31)
+
+The wide v7r1 follow-up installed with final bootloader acceptance and exit 0. Its stationary 180-frame sample measured 158 ms median (6.33 fps), 188 ms p95 and 6.31 fps host throughput with preview disabled. Native/API short taps, input/release, rotation and 160×90 capture checks pass. The user subsequently confirmed complete full-width scene/HUD display, normal operation and responsive gameplay. This is qualitative feedback, not a further timing measurement. The wider view incurs more USB asset requests than v6r1; see [WIDESCREEN.md](WIDESCREEN.md) and [wide-v7r1 evidence](validation/wide-v7r1.json).
+
 ## Limits
 
 - No independent complete application/upper-flash readback was performed.

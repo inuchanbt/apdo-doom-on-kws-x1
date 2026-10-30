@@ -22,10 +22,11 @@ static mut CURRENT_SLOT: usize = 0;
 // Keep individual pages from straddling the Cortex-M memory-region boundary
 // between SRAMH and SRAM1, including when memcpy uses unaligned word loads.
 #[repr(C,align(1024))]
-struct HotPages([[u8;PAGE];8]);
-static mut HOT: HotPages = HotPages([[0;PAGE];8]);
-static mut HOT_TAGS: [u32;8] = [u32::MAX;8];
-static mut HOT_AGES: [u32;8] = [0;8];
+struct HotPages([[u8;PAGE];12]);
+#[unsafe(link_section = ".sram2.hot_pages")]
+static mut HOT: HotPages = HotPages([[0;PAGE];12]);
+static mut HOT_TAGS: [u32;12] = [u32::MAX;12];
+static mut HOT_AGES: [u32;12] = [0;12];
 static mut HOT_CLOCK: u32 = 0;
 static mut MISSES: u32 = 0;
 static mut WAIT_US: u64 = 0;
@@ -36,6 +37,7 @@ pub fn crc32(bytes: &[u8]) -> u32 {
 /// Initialize NOLOAD SRAM2 parity before copying arbitrary-length blocks into it.
 pub unsafe fn init() {
     unsafe { core::ptr::write_bytes((&raw mut BANK0).cast::<u8>(),0,BANK_BYTES); }
+    unsafe { core::ptr::write_bytes((&raw mut HOT).cast::<u8>(),0,12*PAGE); }
 }
 /// USB exclusively writes the response before release-publishing it. The
 /// engine consumes it completely before issuing another request.
@@ -64,8 +66,8 @@ pub unsafe fn read(mut address:u32, mut dst:*mut u8, mut count:usize) {
     while count != 0 {
         let base = address/PAGE as u32*PAGE as u32;
         if unsafe { CURRENT } != base {
-            let hot = (0..8).find(|&i|unsafe {HOT_TAGS[i]}==base);
-            let slot=hot.unwrap_or_else(||(0..8).max_by_key(|&i|unsafe {HOT_CLOCK.wrapping_sub(HOT_AGES[i])}).unwrap());
+            let hot = (0..12).find(|&i|unsafe {HOT_TAGS[i]}==base);
+            let slot=hot.unwrap_or_else(||(0..12).max_by_key(|&i|unsafe {HOT_CLOCK.wrapping_sub(HOT_AGES[i])}).unwrap());
             if hot.is_none() {
             let pinned=crate::pinned_assets::get(base);
             let (encoded_ptr,encoded_len,expected_crc) = if let Some(bytes)=pinned {

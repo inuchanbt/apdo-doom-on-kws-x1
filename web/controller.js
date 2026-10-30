@@ -64,7 +64,9 @@ async function status(){if(stopped)return;try{
   $("error").textContent=state.error||"";
   $("enlarge").disabled=!state.screen;
   if(state.screen){if(state.screen.snapshot!==snapshot){snapshot=state.screen.snapshot;$("screen").src=`/api/frame.bmp?snapshot=${snapshot}`;if($("preview-dialog").open)$("screen-large").src=$("screen").src;$("screen").hidden=false;$("screen-placeholder").hidden=true;$("save-frame").hidden=false;}
-    $("screen-info").textContent=`120 × 90 · preview ${state.screen.preview_fps.toFixed(1)} fps · frame ${state.screen.game_frame}`;
+    $("screen").style.width=state.screen.width===160?"100%":"75%";
+    $("screen-large").style.aspectRatio=`${state.screen.width}/${state.screen.height}`;
+    $("screen-info").textContent=`${state.screen.width} × ${state.screen.height} · preview ${state.screen.preview_fps.toFixed(1)} fps · frame ${state.screen.game_frame}`;
   }else{$("screen").hidden=true;$("screen-placeholder").hidden=false;$("save-frame").hidden=true;$("screen-info").textContent="Waiting for capture…";snapshot=0;}
   $("preview-enabled").checked=state.preview_enabled;
   if(!state.preview_enabled)$("screen-info").textContent="Preview paused · playing on the meter";

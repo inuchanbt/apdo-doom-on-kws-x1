@@ -39,6 +39,8 @@ extern void km_sleep(uint32_t ms);
 extern void km_fail(const char *message) __attribute__((noreturn));
 extern void km_flash_read(uint32_t offset, void *dst, uint32_t count);
 extern void km_column(int x, int y, int h, const uint16_t *pixels);
+extern void km_index_column(int x,int y,int h,const uint8_t *pixels,unsigned ui);
+extern void km_set_palette(const uint16_t *colors);
 extern uint32_t km_keys(void);
 extern void km_exit(void) __attribute__((noreturn));
 
@@ -166,7 +168,7 @@ int dmc_demo_open(const char *name,uint32_t *size) { (void)name;(void)size;retur
 void dmc_demo_read(uint32_t at,void *dst,uint32_t n) { (void)at;(void)dst;(void)n;km_fail("No external demo"); }
 
 // Synchronous LCD pump, retaining the engine's 320x240 column layout.
-static int px,py,ph,reps;
+static int px,py,ph,reps,pump_ui;
 static uint16_t column[240];
 void lcd_begin(int x0,int y0,int x1,int y1) { (void)x1;px=x0;py=y0;ph=y1-y0+1; }
 static int cy;
@@ -181,12 +183,11 @@ void lcd_fill(int x0,int y0,int x1,int y1,uint16_t c) {
     lcd_begin(x0,y0,x1,y1); for(int x=x0;x<=x1;x++) for(int y=y0;y<=y1;y++) lcd_push(c); lcd_end();
 }
 void pump_begin(int x0,int x1,int y0,int y1,int flags) {
-    lcd_begin(x0,y0,x1,y1); reps=(flags&PUMP_DOUBLE)?2:1;
+    lcd_begin(x0,y0,x1,y1); reps=(flags&PUMP_DOUBLE)?2:1;pump_ui=(flags&PUMP_UI)!=0;
 }
 void pump_submit(const uint8_t *p,int ncols) {
     for(int x=0;x<ncols;x++) {
-        for(int y=0;y<ph;y++) column[y]=pump_lut[p[x*ph+y]];
-        for(int r=0;r<reps;r++) km_column(px++,py,ph,column);
+        for(int r=0;r<reps;r++) km_index_column(px++,py,ph,p+x*ph,pump_ui);
     }
 }
 void pump_sync(int max) { (void)max; }
@@ -201,7 +202,7 @@ void I_InitGraphics(void) {}
 void I_StartFrame(void) {}
 void I_UpdateNoBlit(void) {}
 void I_FinishUpdate(void) {}
-void I_SetPalette(int p) { R_PaletteChanged();pal_read(p,pump_lut); }
+void I_SetPalette(int p) { R_PaletteChanged();pal_read(p,pump_lut);km_set_palette(pump_lut); }
 boolean D_WillBuildTic(void);
 void I_StartTic(void) {
     static uint32_t previous;

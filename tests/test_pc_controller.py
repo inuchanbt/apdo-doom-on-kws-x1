@@ -124,6 +124,21 @@ class FakePort:
         return len(data)
 
 class ProtocolTests(unittest.TestCase):
+    def test_wide_capture_and_legacy_capture_keep_dimensions_and_crc(self):
+        for width in (120,160):
+            pixels=b'\0\xf8'*(width*90)
+            payload=b'IMG4'+struct.pack('<IIIII',7,width,90,len(pixels),zlib.crc32(pixels))+pixels
+            class Fragmented:
+                def __init__(self): self.pending=payload
+                def read(self,n):
+                    n=min(n,13);out,self.pending=self.pending[:n],self.pending[n:];return out
+            image=usb_link.receive_image(Fragmented(),7)
+            bridge=pc.Bridge(start=False);bridge.on_connected(5);bridge.on_image(image)
+            self.assertEqual((bridge.snapshot()['screen']['width'],bridge.snapshot()['screen']['height']),(width,90))
+            self.assertEqual(struct.unpack_from('<ii',bridge.frame(),18),(width,-90))
+        class Invalid:
+            def read(self,n):return b'IMG4'+struct.pack('<IIIII',7,161,90,28980,0)
+        with self.assertRaises(ValueError):usb_link.receive_image(Invalid(),7)
     def test_fragmented_asset_control_and_preview_share_one_port(self):
         stop=threading.Event();port=FakePort(stop);images=[];frames=[]
         with patch('serial.Serial',return_value=port):

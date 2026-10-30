@@ -13,7 +13,10 @@ parser.add_argument('--host-test', action='store_true')
 parser.add_argument('--opt', choices=['Oz', 'O2'], default='O2')
 parser.add_argument('--cache-kib', type=int, choices=[0, 2, 4, 8], default=4)
 parser.add_argument('--legacy-input-queue', action='store_true', help='comparison only: queue input after drawing')
+parser.add_argument('--classic-view', action='store_true', help='host comparison only: retain the 4:3 projection')
 args = parser.parse_args()
+if args.classic_view and not args.host_test:
+    parser.error('--classic-view is only supported for host comparisons')
 HOST = args.host_test
 OUT = ROOT / ('artifacts/host-engine' if HOST else 'artifacts/engine')
 LLVM = Path(os.environ.get('APDO_LLVM_BIN', ROOT / 'tools/llvm-mingw-20261020-ucrt-x86_64/bin'))
@@ -27,7 +30,7 @@ sources += [SRC / p for p in ['port/game/fe_glue.c', 'port/game/l_menu.c',
     'port/game/l_wi.c', 'port/game/l_finale.c', 'port/game/i_input.c',
     'port/game/libc_dmc.c', 'platform/rt.c', 'platform/text.c', 'platform/font8x8.c']]
 sources += list((SRC / 'gen').glob('*.c'))
-sources += [ROOT / 'native/doom_bridge.c']
+sources += [ROOT / 'native/doom_bridge.c', ROOT / 'native/wide_view.c']
 includes = ['engine/stub/include', 'engine', 'port/data', 'port/render', 'port/obj',
             'port/math', 'platform', 'port/game', 'port/ovl', 'gen']
 flags = ['--target=thumbv7em-none-eabihf', '-mcpu=cortex-m4', '-mthumb',
@@ -38,6 +41,8 @@ flags = ['--target=thumbv7em-none-eabihf', '-mcpu=cortex-m4', '-mthumb',
 flags += ['-DKM_CACHE_KIB='+str(args.cache_kib)]
 if not args.legacy_input_queue:
     flags += ['-DKM_INPUT_AT_FRAME']
+if not args.classic_view:
+    flags += ['-DKWS_WIDE_VIEW']
 if HOST:
     flags = flags[5:]
     sources += [ROOT/'native/host_harness.c']

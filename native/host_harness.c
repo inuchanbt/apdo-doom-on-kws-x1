@@ -4,9 +4,13 @@
 #include <string.h>
 #include <setjmp.h>
 #include "doomstat.h"
+#include "r_main.h"
 static const uint8_t *image;
 static uint32_t image_size,clock_ms,buttons;
 static uint32_t render_delay_ms;
+static void (*index_callback)(int,int,int,const uint8_t*,unsigned);
+static void (*palette_callback)(const uint16_t*);
+extern uint16_t pump_lut[256];
 static uint8_t input_script[32];
 static unsigned input_count,input_index;
 static uint16_t screen[320*240];
@@ -42,6 +46,18 @@ __declspec(dllexport) int km_host_init(const uint8_t *data,uint32_t n) {
     image=data;image_size=n;clock_ms=0;
     if(setjmp(bail_out))return -1;km_doom_init();return 0;
 }
+void km_set_palette(const uint16_t *colors) {if(palette_callback)palette_callback(colors);}
+void km_index_column(int x,int y,int h,const uint8_t *pixels,unsigned ui) {
+    uint16_t rgb[240];
+    if(h<0 || h>240)km_fail("Host indexed bounds");
+    for(int i=0;i<h;i++)rgb[i]=pump_lut[pixels[i]];
+    km_column(x,y,h,rgb);
+    if(index_callback)index_callback(x,y,h,pixels,ui);
+}
+__declspec(dllexport) void km_host_display_callbacks(
+    void (*column_cb)(int,int,int,const uint8_t*,unsigned),void (*palette_cb)(const uint16_t*)) {
+    index_callback=column_cb;palette_callback=palette_cb;
+}
 __declspec(dllexport) int km_host_step(uint32_t keys) {
     clock_ms+=29;buttons=keys;
     if(setjmp(bail_out))return -1;km_doom_step();return 0;
@@ -59,6 +75,11 @@ __declspec(dllexport) int km_host_build_tics(uint32_t ms) {
 __declspec(dllexport) int32_t km_host_player_x(void) { return players[consoleplayer].mo->x; }
 __declspec(dllexport) int32_t km_host_player_y(void) { return players[consoleplayer].mo->y; }
 __declspec(dllexport) uint32_t km_host_player_angle(void) { return players[consoleplayer].mo->angle; }
+__declspec(dllexport) uint32_t km_host_horizontal_fov(void) { return R_XToViewAngle(0)*2; }
+__declspec(dllexport) void km_host_hud_values(int health,int armor,int ammo) {
+    players[consoleplayer].health=health;players[consoleplayer].armorpoints=armor;
+    players[consoleplayer].ammo[am_clip]=ammo;
+}
 __declspec(dllexport) void km_host_render_delay(uint32_t ms) { render_delay_ms=ms; }
 __declspec(dllexport) int km_host_read(uint32_t at,void *dst,uint32_t n) {
     if(setjmp(bail_out))return -1;nor_read(at,dst,n);return 0;
