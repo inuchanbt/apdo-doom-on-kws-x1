@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 //! Host FFI for the production LCD mapper, connected to the real C engine.
 #[path="../overlays/firmware/indexed_frame.rs"] mod indexed_frame;
+#[path="../overlays/firmware/splash.rs"] mod splash;
 static mut FRAME:indexed_frame::Frame=indexed_frame::Frame::new();
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn wide_splash() {
+    unsafe {splash::draw(&mut *(&raw mut FRAME));}
+}
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn wide_clear() {
     unsafe {(&mut *(&raw mut FRAME)).pixels.fill(0);}

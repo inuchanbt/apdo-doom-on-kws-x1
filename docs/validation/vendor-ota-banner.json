@@ -1,0 +1,67 @@
+{
+  "recorded_date": "2026-10-31",
+  "device_count": 1,
+  "bootloader": "V1.1",
+  "updater": {
+    "filename": "KWS-X1 OTA 英文版.exe",
+    "window_title": "KWS-X1 OTA Tool V1.0",
+    "sha256": "b5f12bfcacbaebdff830485b96fe33d7f4374c3feab658661066fa4a77b9d205",
+    "redistributed": false
+  },
+  "banner": {
+    "asset_sha256": "c4d40bb6c70e12e912f8a10fd6dc7c9f97e0d9555a73740a1d9f8f6264ba7526",
+    "original_rgb565_sha256": "e045db13adc950717ba167b27a22871a600c872717b90afe001cd24ce6f579f5",
+    "lcd": [
+      240,
+      135
+    ],
+    "logo": [
+      216,
+      50
+    ],
+    "minimum_hold_ms": 1200,
+    "pc_wait_keeps_logo_visible": true,
+    "extra_framebuffer_bytes": 0
+  },
+  "offline": {
+    "shared_python_controller_tests": 15,
+    "shared_rust_optimization_mapper_tests": 16,
+    "container_regressions": 9,
+    "original_logo_and_every_output_pixel": "pass",
+    "mini_host_frames": 198,
+    "mini_host_kills": 2,
+    "mini_reader_tests": 8,
+    "mini_all_pack_bytes_and_600_crossing_reads": "pass",
+    "both_image_decompression_layout_audit_and_flasher_dry_run": "pass"
+  },
+  "pc": {
+    "image": "kws-x1-doom-wide-v7r2.X1C",
+    "sha256": "dd8fb79765193f8ae55286d20730f6b2e936b994141f9ba7efabc0464ad67c18",
+    "main_bytes": 184156,
+    "upper_bytes": 150944,
+    "upper_unused_bytes": 12896,
+    "update_unused_content_bytes": 867,
+    "vendor_ota": {
+      "first_attempt": "final firmware verification failed; user reported a USB hub connection",
+      "connection_change": "user changed to direct PC connection and re-entered original loader",
+      "direct_attempt": "Upgrade successful!; Send complete!; KWS-X1:Write completed.Restart!",
+      "restarted_native_game": "confirmed through protocol-5 telemetry and a 160x90 real-device capture after the OTA update",
+      "user_visual_and_controls": "user confirmed startup logo, full-width scene/HUD, physical buttons and PC controls normal, then re-entered Bootloader V1.1"
+    }
+  },
+  "mini": {
+    "image": "kws-x1-mini-wide-v3.X1C",
+    "sha256": "acc8b85c2ec24a51b43a9348eac16ab68fda019c512fb74537a577dc15285d4f",
+    "main_bytes": 150844,
+    "upper_bytes": 140176,
+    "upper_unused_bytes": 23664,
+    "update_unused_content_bytes": 26055,
+    "vendor_ota": {
+      "connection": "direct PC USB; asset server stopped before update",
+      "result": "Upgrade successful!; Send complete!; KWS-X1:Write completed.Restart!",
+      "user_power_only_visual_and_controls": "user confirmed logo, full-width game/HUD, local controls, and successful power-only reconnection without a PC asset server"
+    }
+  },
+  "scope": "One unit, not electrical qualification, endurance testing, stock restoration or independent full flash readback. Hub-associated failure and success after changing to direct connection do not isolate the sole cause. Historical v7r1/v2 measurements remain separate from these banner builds.",
+  "status": "both final images installed with vendor OTA and user-confirmed on one directly connected Bootloader V1.1 unit"
+}

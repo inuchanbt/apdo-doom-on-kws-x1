@@ -2,6 +2,8 @@
 
 This workflow was exercised on one KWS-X1 showing **Bootloader V1.1**. Keep a compatible original manufacturer X1C before changing the application. Manufacturer firmware, vendor update tools, calibration data, and device dumps are not published in this repository.
 
+For release downloads, explicit risks and the manufacturer's Windows OTA tool, see [FIRMWARE.md](FIRMWARE.md) ([日本語](FIRMWARE.ja.md)). The alternative developer-flasher workflow below is separate. Neither workflow guarantees recovery from an interrupted or incompatible update.
+
 ## What the image changes
 
 | Flash range | Use |
@@ -42,13 +44,13 @@ To write the reviewed image and its exact hash:
 
 The flasher checks the supported HID identity and refuses ambiguous device selection. It writes checked batches, waits for final acceptance, and sends reboot only after acceptance. The upstream tool can retry a complete application pass after verification code 4. Do not disconnect during writing or first-boot unpacking.
 
-Then start the PC controller (it also supplies assets and detects v4/v5):
+For the **PC-connected version**, start the PC controller (it also supplies assets and detects v4/v5):
 
 ```powershell
 .\scripts\play.ps1
 ```
 
-For headless v5 play use `scripts/serve-game.py --auto --version 5`; older images need their corresponding version. Gameplay always requires asset delivery from one server. If gameplay stops after a USB loss, restart the server and power-cycle the meter. If the application does not start, re-enter the original loader with Back + OK rather than relying on the application USB interface. See [PC-CONTROLS.md](PC-CONTROLS.md) for controller setup.
+For headless v5 play use `scripts/serve-game.py --auto --version 5`; older images need their corresponding version. PC-connected gameplay requires asset delivery from one server. If gameplay stops after a USB loss, restart the server and power-cycle the meter. The **standalone mini version** starts without a PC server and only needs power. If the application does not start, re-enter the original loader with Back + OK rather than relying on the application USB interface. See [PC-CONTROLS.md](PC-CONTROLS.md) for controller setup.
 
 ## Going back to stock
 

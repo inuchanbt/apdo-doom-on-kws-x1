@@ -21,6 +21,8 @@ if args.mini:
 REVISION = '517c5a9bf3fa9bda0be8f9ade435b108e588ad82'
 assert subprocess.check_output(['git', '-C', str(BOARD), 'rev-parse', 'HEAD'], text=True).strip() == REVISION
 lock=json.loads((ROOT/'SOURCE_LOCK.json').read_text())
+banner=json.loads((OVERLAY/'freedoom-banner.json').read_text())
+assert hashlib.sha256((OVERLAY/'freedoom-banner.bin').read_bytes()).hexdigest()==banner['sha256'], 'Startup logo hash mismatch'
 if 'pinned_game_pages' in lock:
     blob=(OVERLAY/'game_pages.bin').read_bytes()
     assert len(blob)==lock['pinned_game_pages']['bytes']

@@ -1,8 +1,10 @@
 # Standalone Mini DOOM — widescreen branch
 
-This variant runs an original two-sector arena with Freedoom artwork entirely from the KWS-X1's internal application flash. It starts directly into the game, samples the physical buttons independently, and does not initialize USB or wait for a host. USB is needed only as a power source during play. The original Back+OK update loader remains available.
+**Experimental firmware: an interrupted or incompatible update can leave the meter unbootable; recovery and stock restoration are not verified or guaranteed.** Meter measurement/PD/QC functions are replaced, and electrical passthrough/protection behavior is unqualified. Leave downstream equipment disconnected. See [release downloads, full risks and vendor OTA instructions](../docs/FIRMWARE.md) ([日本語](../docs/FIRMWARE.ja.md)) before updating. Use at your own risk, without warranty.
 
-Development branch: `codex/standalone-widescreen`, based on standalone commit `546d560` and importing shared engine/display changes from the verified PC-wide checkpoint `fe61b00`. **Mini-wide v2 is installed and user-confirmed: power-only startup, full-width display/HUD, local controls and smooth gameplay.** Its full 240×135 output keeps natural proportions, about 106° horizontal FOV and a HUD distributed across the bottom.
+This variant runs an original two-sector arena with Freedoom artwork entirely from the KWS-X1's internal application flash. It displays the original Freedoom startup logo for 1.2 seconds, then starts the game, samples the physical buttons independently, and does not initialize USB or wait for a host. USB is needed only as a power source during play. The original Back+OK update loader remains available.
+
+Development branch: `codex/standalone-widescreen`, based on standalone commit `546d560` and importing shared engine/display changes from the verified PC-wide checkpoint `fe61b00`. **Mini-wide v3 is installed through the manufacturer OTA tool and user-confirmed: startup logo, power-only reconnection, full-width display/HUD and local controls.** Its full 240×135 output keeps natural proportions, about 106° horizontal FOV and a HUD distributed across the bottom.
 
 The earlier 4:3 mini image on `codex/standalone-mini-doom` installed with clean final loader acceptance and flasher exit 0 after one complete retry. The user confirmed power-only startup and physical controls on one Bootloader V1.1 unit, and reported very smooth gameplay. That feedback belongs to the earlier image, not a numeric benchmark of this wide build.
 
@@ -42,7 +44,17 @@ The unchanged pack is **144,320 bytes**, stored as **112,095 bytes** in 141 inde
 
 The full-width display uses 32,400 palette indices and a 512-byte RGB565 palette. Four rows are expanded per LCD DMA transfer. World, enemy, weapon, menu and HUD artwork retain their palette colors; horizontal projection, sprite scales and floor stepping compensate for the wide LCD. Menus retain their proportions in the middle, while complete HUD groups are spaced across the bottom. The C engine and firmware package use speed optimization; the power-only startup and local buttons stay separate from the PC adapters.
 
-### Wide v2 image
+### Wide v3 image with startup logo
+
+The release image `kws-x1-mini-wide-v3.X1C` adds the original Freedoom Phase 1 logo for 1.2 seconds before starting the game. Its 216×50 render uses the existing indexed frame and a 6,021-byte internal logo asset; no additional framebuffer or gameplay-loop work is added. SHA-256:
+
+```text
+acc8b85c2ec24a51b43a9348eac16ab68fda019c512fb74537a577dc15285d4f
+```
+
+Main application: **150,844 bytes**. Upper application: **140,176 bytes**, with **23,664 bytes free**. Update content free: **26,055 bytes**. The game asset pack, protected flash ranges and no-USB startup remain unchanged. The exact image passed decompression/layout audit and dry-run, then the manufacturer's **KWS-X1 OTA Tool V1.0** displayed `Upgrade successful!` and `KWS-X1:Write completed.Restart!` over a direct PC USB connection. The asset server was stopped before updating. The user confirmed the logo, full-width game/HUD and local controls, including a power-only reconnection. See [vendor OTA evidence](../docs/validation/vendor-ota-banner.json).
+
+### Earlier wide v2 image
 
 `artifacts/mini/kws-x1-mini-wide-v2.X1C` passed full decompression/layout audit and flasher dry-run. SHA-256:
 
@@ -81,8 +93,8 @@ Mini firmware uses the same protected bootloader/application/upper-region bounds
 
 The wide engine ran 198 functional-test frames, consumed pistol ammo, killed both enemies, moved/turned the player, opened/closed the menu, and reproduced both canonical and indexed full-width HUD output after a clear/redraw. The actual production LCD mapper is attached to the engine's palette/column callbacks during the test, and its 240×135 captures show both LCD edges and intact HUD/menu output. Measured host projection FOV is 106.259765625°. These are functional checks, not MCU FPS measurements.
 
-The actual standalone asset reader matches the full pack and 600 randomized crossing/eviction reads without any USB implementation. All eight mini reader/codec/control tests pass. The shared PC suite also passes: 15 Python controller tests, 15 Rust optimization/mapper tests, real engine/cadence/short-input tests, all 2,737 PC-pack codec pages and nine container regressions.
+The actual standalone asset reader matches the full pack and 600 randomized crossing/eviction reads without any USB implementation. All eight mini reader/codec/control tests pass. The shared PC suite also passes: 15 Python controller tests, 16 Rust optimization/mapper tests, real engine/cadence/short-input tests, all 2,737 PC-pack codec pages and nine container regressions.
 
-Physical power-only startup, full-width display/HUD and controls of **wide v2 are user-confirmed**, with reported smooth gameplay. This is qualitative feedback: FPS and runtime stack margin are not instrumented, and sustained stability has not been tested. The original loader and reserved manufacturer data are not acquired as a complete flash backup.
+Physical power-only startup, full-width display/HUD and controls of **wide v3 are user-confirmed**, after a direct-PC vendor OTA update. This is qualitative feedback: FPS and runtime stack margin are not instrumented, and sustained stability has not been tested. The original loader and reserved manufacturer data are not acquired as a complete flash backup.
 
 For the earlier 4:3 image, the PC asset/controller server was stopped before installation, and no DOOM CDC interface appeared after the update, as expected. See [the earlier validation record](../docs/validation/mini-v1.json).

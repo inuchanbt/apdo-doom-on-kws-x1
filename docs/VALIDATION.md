@@ -124,6 +124,14 @@ The real host engine passed 198 functional-test frames with movement, turning, f
 
 With the PC asset server stopped and no DOOM CDC port enumerated, the user confirmed power-only startup, complete full-width display/HUD, local controls and smooth gameplay. This is qualitative feedback, not a measured FPS or endurance result. See [standalone details](../standalone/README.md) and [mini-wide v2 evidence](validation/mini-wide-v2.json).
 
+## Release images with original Freedoom startup banner
+
+The PC wide v7r2 and standalone wide v3 images add an exact-palette original Freedoom Phase 1 startup logo, centered at 216×50 on the 240×135 LCD. It uses the existing indexed frame, remains for at least 1.2 seconds, and stays visible while the PC version waits for the server. Host checks verify every output pixel against the original KM003C logo asset. All 15 controller tests, 16 Rust optimization/mapper tests, real engine/input/cache/codec checks and nine container regressions pass; mini also passes its 198-frame/two-kill test and eight reader/codec/control tests. Both exact images passed full decompression/layout audit and flasher dry-run.
+
+Both images were then installed using the manufacturer's **KWS-X1 OTA Tool V1.0** on one Bootloader V1.1 unit. A hub-connected PC v7r2 attempt failed final firmware verification. The user changed to direct PC USB; the identical image then reached `Upgrade successful!` and `KWS-X1:Write completed.Restart!`. Native telemetry and a valid 160×90 capture confirmed game execution. The user confirmed the startup logo, full-width display and both local/PC controls. This sequence does not isolate the hub as the sole cause of the earlier failure.
+
+The standalone wide v3 update then succeeded through the same vendor tool and direct connection, with the PC asset server stopped. The user confirmed its startup logo, game display and local controls, including a power-only reconnection without the server. Current image hashes, linked sizes and the updater hash are in [vendor-ota-banner.json](validation/vendor-ota-banner.json). Earlier v7r1 and mini v2 timing/flasher records remain historical; these banner builds have no new controlled FPS or endurance measurement. Neither update proves stock restoration or independent full flash readback.
+
 ## Limits
 
 - No independent complete application/upper-flash readback was performed.

@@ -16,6 +16,7 @@ mod remote;
 mod preview;
 mod display;
 mod indexed_frame;
+mod splash;
 use embassy_hc32::{gpio::{self, AlternateMode, AlternatePin, InputPin, Port}, intc};
 use hc32f460_pac::interrupt;
 use panic_halt as _;

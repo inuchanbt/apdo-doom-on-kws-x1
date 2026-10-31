@@ -79,7 +79,15 @@ pub async fn run() -> ! {
         crate::stream::init();
         assert!(crate::panel::game_clear(crate::panel::Orientation::Normal).await);
     }
-    unsafe { km_doom_init(); }
+    unsafe {
+        crate::splash::draw(&mut *(&raw mut FRAME));
+        assert!(crate::panel::game_flush(&*(&raw const FRAME),crate::panel::Orientation::Normal).await);
+    }
+    embassy_time::Timer::after_millis(1200).await;
+    unsafe {
+        (&mut *(&raw mut FRAME)).pixels.fill(0);
+        km_doom_init();
+    }
     crate::stream::reset_counters();
     let mut frames = 0u32;
     loop {

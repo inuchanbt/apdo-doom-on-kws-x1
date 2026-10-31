@@ -5,6 +5,7 @@
 #[path = "../overlays/firmware/control.rs"] mod control;
 #[path = "../overlays/firmware/preview.rs"] mod preview;
 #[path = "../overlays/firmware/indexed_frame.rs"] mod indexed_frame;
+#[path = "../overlays/firmware/splash.rs"] mod splash;
 fn word(data:&[u8], at:&mut usize) -> u32 {
     let n=u32::from_le_bytes(data[*at..*at+4].try_into().unwrap()); *at+=4; n
 }

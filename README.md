@@ -2,7 +2,13 @@
 
 [English](README.md) · [日本語](README.ja.md)
 
-**Standalone widescreen development branch:** mini-wide v2 uses the full **240×135 LCD**, about **106° horizontal FOV**, natural proportions and a redistributed HUD. The user confirmed power-only startup, complete display/HUD, physical controls and smooth gameplay. All assets are internal; no PC server is needed. Offline tests and image audit pass, and the loader accepted the update with exit 0. See [standalone build, image and controls](standalone/README.md). This branch has not been merged into `main`.
+## Firmware downloads and risks
+
+**Experimental, unofficial firmware: flashing can leave the meter unbootable, and recovery is not guaranteed.** The stock measurement/PD/QC application is replaced. Electrical passthrough and protection behavior are not qualified; use only the required power/data connection, with other equipment disconnected. Hardware damage is possible. Stock restoration, full calibration/loader recovery and long-duration stability are unverified. Use at your own risk, without warranty; only one Bootloader V1.1 device was tested.
+
+Choose the [PC-connected wide E1M1 release](https://github.com/inuchanbt/apdo-doom-on-kws-x1/releases/tag/pc-wide-v7r2) or [power-only standalone wide mini release](https://github.com/inuchanbt/apdo-doom-on-kws-x1/releases/tag/standalone-wide-v3). Each provides an `.X1C`, checksums, instructions, notices and corresponding source. **Read [the full risks and vendor OTA instructions](docs/FIRMWARE.md) before updating.** Both release images were installed with **KWS-X1 OTA Tool V1.0**, directly connected to the PC, and their startup logo/game operation were confirmed on the same Bootloader V1.1 unit. See the [OTA validation record](docs/validation/vendor-ota-banner.json).
+
+**Standalone widescreen development branch:** mini-wide v3 uses the full **240×135 LCD**, about **106° horizontal FOV**, natural proportions and a redistributed HUD. The user confirmed power-only startup, complete display/HUD, physical controls and smooth gameplay. All assets are internal; no PC server is needed. Offline tests and image audit pass, and the manufacturer OTA tool accepted and restarted the release image. See [standalone build, image and controls](standalone/README.md). This branch has not been merged into `main`.
 
 **The KOWSI KWS-X1 USB-C power meter runs DOOM.** The standalone mini arena runs on its HC32F460 using assets stored in internal flash. **During play it only needs power; no PC or asset server is required.** The wide version's power-only startup, display and local controls were confirmed on one Bootloader V1.1 unit.
 
