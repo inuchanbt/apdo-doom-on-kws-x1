@@ -114,7 +114,7 @@ def main():
             'calibration dump, credentials or local machine configuration is included.\n')
     if not mini:
         with zipfile.ZipFile(out/'pc-runtime.zip','w',zipfile.ZIP_DEFLATED,strict_timestamps=False) as archive:
-            for name in ('scripts/play.ps1','scripts/env.ps1','scripts/pc-controller.py','scripts/usb_link.py','requirements.txt'):
+            for name in ('scripts/play.ps1','scripts/env.ps1','scripts/pc-controller.py','scripts/usb_link.py','scripts/block_codec.py','requirements.txt'):
                 archive.write(ROOT/name,name)
             tree(archive,ROOT/'web','web')
             tree(archive,ROOT/'docs','docs')
