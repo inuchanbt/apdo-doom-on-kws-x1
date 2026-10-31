@@ -27,6 +27,8 @@ try {
     if ($env:APDO_LLVM_BIN) { $taskWideArgs+=@('-C',"dlltool=$env:APDO_LLVM_BIN\llvm-dlltool.exe") }
     rustc @taskWideArgs
     if ($LASTEXITCODE) { throw 'Wide LCD mapper build failed' }
+    & $env:KWS_PYTHON tests/test-splash.py
+    if ($LASTEXITCODE) { throw 'Startup banner pixel checks failed' }
     & $env:KWS_PYTHON tests/test-wide-engine.py
     if ($LASTEXITCODE) { throw 'Wide LCD engine checks failed' }
     cargo test --manifest-path vendor\kws-x1-standalone-rs\Cargo.toml --release --locked -p firmware-pack -p firmware-image -p flasher --target x86_64-pc-windows-gnu

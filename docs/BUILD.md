@@ -97,3 +97,11 @@ A separate real-engine regression fills the tic-command buffer, queues a short f
 The performance branch also tests turn press/release after a simulated 100 ms draw, and checks the short-record cache against actual pack bytes at line/EOF boundaries and across 140 real game frames.
 
 These checks do not emulate the MCU, panel, USB controller, or bootloader. See [VALIDATION.md](VALIDATION.md) for the actual hardware evidence and its limits.
+
+## Startup logo and binary releases
+
+The startup banner uses the original Freedoom 0.13.0 Phase 1 `M_DOOM` logo. `scripts/extract-splash.py` reproduces the checked-in indexed RGB565 asset from the hash-verified official release ZIP; use `--zip PATH --check` to verify it without changing files. Provenance is in `overlays/firmware/freedoom-banner.json`, and Freedoom notices remain in `notices/`. Source staging checks the asset hash. The host tests compare every rendered LCD pixel with the original logo, including its black margins and palette colors.
+
+The 216×50 banner uses the existing 240×135 indexed frame, appears for at least 1.2 seconds, and remains visible during the PC server wait. The game clears its indices before engine initialization; there is no banner rendering in the gameplay loop.
+
+`scripts/package-release.py` packages an already-audited image from a clean source commit, with checksums, bilingual risk/update instructions, licenses, complete prepared board/engine/doomgeneric source and cached Rust dependency sources. It also creates the PC runtime/data ZIP for the PC release. It neither opens USB nor publishes anything. Release assets are uploaded separately after hardware confirmation; manufacturer software and private recovery data are excluded. See [FIRMWARE.md](FIRMWARE.md).

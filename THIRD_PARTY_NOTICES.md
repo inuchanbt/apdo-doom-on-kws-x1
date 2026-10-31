@@ -13,8 +13,10 @@ The existing root [LICENSE](LICENSE) is MIT. It applies to documentation, projec
 
 `game_pages.bin` is a compressed subset of the hash-verified converted Freedoom E1M1 pack. Its generated lookup table is `pinned_assets.rs`; its source and hashes are recorded in `SOURCE_LOCK.json`. It is game data, not manufacturer firmware. No commercial DOOM IWAD is included.
 
+`overlays/firmware/freedoom-banner.bin` contains the original Freedoom 0.13.0 Phase 1 `M_DOOM` menu logo, flattened onto black and stored as an exact RGB565 palette with indices. Its BSD license and credits are in `notices/freedoom-0.13.0/`; extraction provenance and hashes are in the adjacent JSON. `scripts/extract-splash.py`, adapted from this project's KM003C independent firmware, reproduces it from the hash-verified official archive. The logo does not imply endorsement by Freedoom or its contributors.
+
 The HC32 HAL/PAC, Embassy, and other Rust dependencies keep their own upstream terms. `locks/board.Cargo.lock` fixes dependency revisions. Dependency source remains in ignored local checkouts rather than being relicensed by this project. A complete redistribution must preserve the corresponding upstream notices and satisfy the terms of the combined firmware.
 
-Manufacturer X1C files, vendor update executables, bootloader dumps, calibration data, recovery backups, and compiled firmware are not included in this source repository.
+Manufacturer X1C files, vendor update executables, bootloader dumps, calibration data and recovery backups are not redistributed. Compiled experimental game firmware is provided separately as GitHub Release assets, with checksums, license notices and corresponding source. Binary releases retain the GPL terms of the linked engine and the original terms of the other components; the root MIT license does not relicense the combined firmware.
 
 `web/assets/kws-x1-shell.png` is the enclosure photograph supplied by the user as `KOWSI_KWS-X1.png`, copied without image edits. Its original rights remain with its rights holder; the project's source-code MIT/GPL notices do not relicense this photograph.

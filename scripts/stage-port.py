@@ -16,6 +16,8 @@ BOARD = ROOT / 'vendor/kws-x1-standalone-rs'
 REVISION = '517c5a9bf3fa9bda0be8f9ade435b108e588ad82'
 assert subprocess.check_output(['git', '-C', str(BOARD), 'rev-parse', 'HEAD'], text=True).strip() == REVISION
 lock=json.loads((ROOT/'SOURCE_LOCK.json').read_text())
+banner=json.loads((OVERLAY/'freedoom-banner.json').read_text())
+assert hashlib.sha256((OVERLAY/'freedoom-banner.bin').read_bytes()).hexdigest()==banner['sha256'], 'Startup logo hash mismatch'
 if 'pinned_game_pages' in lock:
     blob=(OVERLAY/'game_pages.bin').read_bytes()
     assert len(blob)==lock['pinned_game_pages']['bytes']
@@ -70,8 +72,6 @@ embassy-sync = { git = "https://github.com/embassy-rs/embassy.git", rev = "c2413
 embassy-usb = { git = "https://github.com/embassy-rs/embassy.git", rev = "c2413d5994bbd8b7e6d5975fd49e6427cb903a02" }
 embassy-usb-driver = { git = "https://github.com/embassy-rs/embassy.git", rev = "c2413d5994bbd8b7e6d5975fd49e6427cb903a02" }
 
-# Asset decoding and page lookup run on every engine read. Dependencies keep
-# their upstream size profile; optimize the firmware package for speed.
 [profile.release.package.firmware]
 opt-level = 2
 '''

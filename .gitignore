@@ -15,6 +15,7 @@
 *.zip
 *.bin
 !/overlays/firmware/game_pages.bin
+!/overlays/firmware/freedoom-banner.bin
 *.log
 *.jsonl
 *.mencrypt

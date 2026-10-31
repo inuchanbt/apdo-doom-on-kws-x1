@@ -2,6 +2,14 @@
 
 [English](README.md) · [日本語](README.ja.md)
 
+## Firmware downloads and risks
+
+**Experimental, unofficial firmware: flashing can leave the meter unbootable, and recovery is not guaranteed.** The stock measurement/PD/QC application is replaced. Electrical passthrough and protection behavior are not qualified; use only the required power/data connection, with other equipment disconnected. Hardware damage is possible. Stock restoration, full calibration/loader recovery and long-duration stability are unverified. Use at your own risk, without warranty; only one Bootloader V1.1 device was tested.
+
+Choose the [PC-connected wide E1M1 release](https://github.com/inuchanbt/apdo-doom-on-kws-x1/releases/tag/pc-wide-v7r2) or [power-only standalone wide mini release](https://github.com/inuchanbt/apdo-doom-on-kws-x1/releases/tag/standalone-wide-v3). Each provides an `.X1C`, checksums, instructions, notices and corresponding source. **Read [the full risks and vendor OTA instructions](docs/FIRMWARE.md) before updating.** Both release images were installed with **KWS-X1 OTA Tool V1.0**, directly connected to the PC, and their startup logo/game operation were confirmed on the same Bootloader V1.1 unit. See the [OTA validation record](docs/validation/vendor-ota-banner.json).
+
+**Current PC release v7r2:** adds the original Freedoom startup logo to the verified wide renderer. Direct-PC manufacturer OTA update, logo, display and local/PC controls are confirmed. The following performance sample belongs to the earlier v7r1 image.
+
 **Widescreen development branch:** v7r1 uses the 240×135 LCD, keeps natural proportions, widens horizontal FOV to about 106°, and redistributes the HUD. Native/API checks pass, and the user confirmed complete display/HUD, normal operation and responsive gameplay. A 180-frame starting-area sample measured **158 ms (6.3 fps)** with preview disabled. See [WIDESCREEN.md](docs/WIDESCREEN.md). Historical 4:3 results are identified by their earlier version numbers below.
 
 **The KOWSI KWS-X1 USB-C power meter runs DOOM.** This port executes a low-memory DOOM engine and renders Freedoom's E1M1 on the meter's HC32F460. A USB-connected PC supplies game assets that do not fit on the device.
