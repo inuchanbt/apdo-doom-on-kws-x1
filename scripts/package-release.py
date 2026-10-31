@@ -57,13 +57,13 @@ def main():
     shutil.copyfile(image,out/image.name)
     for src,dst in [('docs/FIRMWARE.md','README.EN.md'),('docs/FIRMWARE.ja.md','README.JA.md')]:
         shutil.copyfile(ROOT/src,out/dst)
-    with zipfile.ZipFile(out/'licenses.zip','w',zipfile.ZIP_DEFLATED) as archive:notice_files(archive)
+    with zipfile.ZipFile(out/'licenses.zip','w',zipfile.ZIP_DEFLATED,strict_timestamps=False) as archive:notice_files(archive)
     commit=git(ROOT,'rev-parse','HEAD').decode().strip()
     metadata=json.loads(args.metadata.read_text(encoding='utf-8-sig'))
     packages=[p for p in metadata['packages'] if p.get('source')]
     manifest={'tag':args.tag,'source_commit':commit,'firmware_sha256':expected,'variant':args.variant,
               'packages':[{'name':p['name'],'version':p['version'],'source':p['source']} for p in packages]}
-    with zipfile.ZipFile(out/'corresponding-source.zip','w',zipfile.ZIP_DEFLATED) as archive:
+    with zipfile.ZipFile(out/'corresponding-source.zip','w',zipfile.ZIP_DEFLATED,strict_timestamps=False) as archive:
         with zipfile.ZipFile(io.BytesIO(git(ROOT,'archive','--format=zip','HEAD'))) as project:
             for name in project.namelist():
                 if not name.endswith('/'):archive.writestr('project/'+name,project.read(name))
@@ -113,7 +113,7 @@ def main():
             'Keep COPYING and all original per-file notices. No manufacturer firmware, updater executable, bootloader, '
             'calibration dump, credentials or local machine configuration is included.\n')
     if not mini:
-        with zipfile.ZipFile(out/'pc-runtime.zip','w',zipfile.ZIP_DEFLATED) as archive:
+        with zipfile.ZipFile(out/'pc-runtime.zip','w',zipfile.ZIP_DEFLATED,strict_timestamps=False) as archive:
             for name in ('scripts/play.ps1','scripts/env.ps1','scripts/pc-controller.py','scripts/usb_link.py','requirements.txt'):
                 archive.write(ROOT/name,name)
             tree(archive,ROOT/'web','web')
