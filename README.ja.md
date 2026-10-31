@@ -2,6 +2,14 @@
 
 [English](README.md) · [日本語](README.ja.md)
 
+## ファームウェア公開とリスク
+
+**非公式・実験用です。更新で起動不能になる可能性があり、復旧は保証できません。** 純正の計測・PD/QCアプリを置き換えます。電気的な通過動作や保護機能は検証していないため、必要な電源・データ接続だけにし、他の機器は接続しないでください。ハードウェアが損傷する可能性があります。純正復帰、校正値・ローダーの完全復旧、長時間安定性は未検証です。無保証・自己責任での使用となり、確認対象はBootloader V1.1の1台だけです。
+
+[PC接続ワイドE1M1版](https://github.com/inuchanbt/apdo-doom-on-kws-x1/releases/tag/pc-wide-v7r2)と[電源だけで動く単体ワイドミニ版](https://github.com/inuchanbt/apdo-doom-on-kws-x1/releases/tag/standalone-wide-v3)を選べます。各リリースに`.X1C`・チェックサム・手順・ライセンス・対応ソースを添付します。**更新前に[リスクの詳細と純正OTA手順](docs/FIRMWARE.ja.md)を読んでください。** 2種類ともPC直結・**KWS-X1 OTA Tool V1.0**で更新し、同じBootloader V1.1の1台で起動ロゴ・ゲーム動作を確認済みです。[OTA検証記録](docs/validation/vendor-ota-banner.json)も公開しています。
+
+公開ファームのソースはそれぞれのタグに対応し、`main`のゲームコードは以前のベースを維持しています。
+
 **KOWSI KWS-X1の本体でDOOMが動きました。** 省メモリ版DOOMエンジンでFreedoomのE1M1を実行し、HC32F460でゲーム処理と描画を行います。本体に収まらない素材はUSB接続したPCから供給します。
 
 **プレイ中もPCへの接続が必要です。** 現在は本体ボタンで操作します。ブラウザーからの操作とPCへの映像プレビューは未実装です。

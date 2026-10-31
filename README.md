@@ -2,6 +2,14 @@
 
 [English](README.md) · [日本語](README.ja.md)
 
+## Firmware downloads and risks
+
+**Experimental, unofficial firmware: flashing can leave the meter unbootable, and recovery is not guaranteed.** The stock measurement/PD/QC application is replaced. Electrical passthrough and protection behavior are not qualified; use only the required power/data connection, with other equipment disconnected. Hardware damage is possible. Stock restoration, full calibration/loader recovery and long-duration stability are unverified. Use at your own risk, without warranty; only one Bootloader V1.1 device was tested.
+
+Choose the [PC-connected wide E1M1 release](https://github.com/inuchanbt/apdo-doom-on-kws-x1/releases/tag/pc-wide-v7r2) or [power-only standalone wide mini release](https://github.com/inuchanbt/apdo-doom-on-kws-x1/releases/tag/standalone-wide-v3). Each provides an `.X1C`, checksums, instructions, notices and corresponding source. **Read [the full risks and vendor OTA instructions](docs/FIRMWARE.md) before updating.** Both release images were installed with **KWS-X1 OTA Tool V1.0**, directly connected to the PC, and their startup logo/game operation were confirmed on the same Bootloader V1.1 unit. See the [OTA validation record](docs/validation/vendor-ota-banner.json).
+
+Release source is on each matching tag; `main` retains the earlier baseline.
+
 **The KOWSI KWS-X1 USB-C power meter runs DOOM.** This port executes a low-memory DOOM engine and renders Freedoom's E1M1 on the meter's HC32F460. A USB-connected PC supplies game assets that do not fit on the device.
 
 The game runs on the meter. **A PC connection is required during play.** The current version uses the physical buttons; browser controls and a PC video preview have not been implemented.
